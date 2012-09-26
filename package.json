@@ -1,11 +1,12 @@
 {
-  "name": "CoffeeScriptRedux",
-  "author": "Michael Ficarra",
-  "version": "2.0.0-dev",
-  "homepage": "https://github.com/michaelficarra/CoffeeScriptRedux",
-  "bugs": "https://github.com/michaelficarra/CoffeeScriptRedux/issues",
-  "description": "Unfancy JavaScript",
+  "name": "coffee-to-livescript",
+  "author": "George Zahariev",
+  "version": "0.0.1",
+  "homepage": "https://github.com/gkz/coffee-to-livescript",
+  "bugs": "https://github.com/gkz/coffee-to-livescript/issues",
+  "description": "Compile CoffeeScript into LiveScript",
   "keywords": [
+    "livescript",
     "coffeescript",
     "javascript",
     "language",
@@ -13,12 +14,11 @@
   ],
   "main": "./lib/coffee-script/module",
   "bin": {
-    "coffee": "./bin/coffee",
-    "cake": "./bin/cake"
+    "coffee-to-livescript": "./bin/coffee-to-livescript"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/michaelficarra/CoffeeScriptRedux.git"
+    "url": "git://github.com/gkz/coffee-to-livescript.git"
   },
   "scripts": {
     "build": "make -j build",
@@ -41,7 +41,7 @@
   "licenses": [
     {
       "type": "3-clause BSD",
-      "url": "https://raw.github.com/michaelficarra/CoffeeScriptRedux/master/LICENSE"
+      "url": "https://raw.github.com/gkz/coffee-to-livescript/master/LICENSE"
     }
   ],
   "license": "3-clause BSD"
