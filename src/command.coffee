@@ -267,21 +267,25 @@ else
 
     # cs code gen
     if options.lscodegen
-      handleNodes = (node, o) ->
+      handleNodes = (node, o, inFunc) ->
+        if node.className is 'Function'
+          o = o[..]
+          inFunc = []
         if node.className is 'AssignOp' and node.assignee.className is 'Identifier'
           name = node.assignee.data
-          if name in o
+          if name in o and name not in inFunc
             node.reassign = true
           else
             o.push name
-        o = o[..]
+            inFunc.push name
         for k, child of node when child.instanceof?
-          handleNodes child, o
+          handleNodes child, o, inFunc
         for k in node.listMembers
           for child in node[k]
-            handleNodes child, o
+            handleNodes child, o, inFunc
 
-      handleNodes result, []
+      handleNodes result, [], []
+
       # preprocess result
       try result = lscodegen.generate result
       catch e
