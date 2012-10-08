@@ -5,7 +5,7 @@ path = require 'path'
 {Preprocessor} = require './preprocessor'
 {Optimiser} = require './optimiser'
 CoffeeScript = require './module'
-cscodegen = try require 'cscodegen'
+lscodegen = try require 'lscodegen'
 escodegen = try require 'escodegen'
 uglifyjs = try require 'uglify-js'
 
@@ -26,7 +26,7 @@ optionMap = {}
 optionArguments = [
   [['parse',   'p'], off, 'output a JSON-serialised AST representation of the input']
   [['compile', 'c'], off, 'output a JSON-serialised AST representation of the output']
-  [['optimise'    ],  on, 'enable optimisations (default: on)']
+  [['optimise'    ], off, 'enable optimisations (default: on)']
   [['debug'       ], off, 'output intermediate representations on stderr for debug']
   [['version', 'v'], off, 'display the version number']
   [['help'        ], off, 'display this help message']
@@ -52,8 +52,8 @@ if escodegen?
     optionArguments.push [['minify',  'm'], off, 'run compiled javascript output through a JS minifier']
   parameterArguments.push [['require', 'I'], 'FILE' , 'require a library before a script is executed']
 
-if cscodegen?
-  optionArguments.push [['cscodegen', 'f'], off, 'output cscodegen-generated CoffeeScript code']
+if lscodegen?
+  optionArguments.push [['lscodegen', 'f'], on, 'output LiveScript']
 
 
 shortOptionArguments = []
@@ -108,7 +108,7 @@ while args.length
 # input validation
 
 positionalArgs = positionalArgs.concat additionalArgs
-unless options.compile or options.js or options['source-map'] or options.parse or options.eval or options.cscodegen
+unless options.compile or options.js or options['source-map'] or options.parse or options.eval or options.lscodegen
   if not escodegen?
     options.compile = on
   else if positionalArgs.length
@@ -119,9 +119,9 @@ unless options.compile or options.js or options['source-map'] or options.parse o
     options.repl = on
 
 # mutual exclusions
-# - p (parse), c (compile), j (js), source-map, e (eval), cscodegen, repl
-if 1 isnt options.parse + options.compile + (options.js ? 0) + (options['source-map'] ? 0) + (options.eval ? 0) + (options.cscodegen ? 0) + (options.repl ? 0)
-  console.error "Error: At most one of --parse (-p), --compile (-c), --js (-j), --source-map, --eval (-e), --cscodegen, or --repl may be used."
+# - p (parse), c (compile), j (js), source-map, e (eval), lscodegen, repl
+if 1 isnt options.parse + options.compile + (options.js ? 0) + (options['source-map'] ? 0) + (options.eval ? 0) + (options.lscodegen ? 0) + (options.repl ? 0)
+  console.error "Error: At most one of --parse (-p), --compile (-c), --js (-j), --source-map, --eval (-e), --lscodegen, or --repl may be used."
   process.exit 1
 
 # - i (input), w (watch), cli
@@ -149,9 +149,9 @@ if options.bare and not (options.compile or options.js or options['source-map'] 
 if options.input? and (fs.statSync options.input).isDirectory() and (not options.output? or (fs.statSync options.output)?.isFile())
   console.error 'Error: when --input is a directory, --output must be provided, and --output must not reference a file'
 
-# - cscodegen depends on cscodegen
-if options.cscodegen and not cscodegen?
-  console.error 'Error: cscodegen must be installed to use --cscodegen'
+# - lscodegen depends on lscodegen
+if options.lscodegen and not lscodegen?
+  console.error 'Error: lscodegen must be installed to use --lscodegen'
   process.exit 1
 
 
@@ -180,7 +180,7 @@ if options.help
     Usage:
       #{$0} FILE ARG* [-- ARG*]
       #{$0} OPT* [--repl] OPT*
-      #{$0} OPT* -{-parse,p,-compile,c,-js,j,-cscodegen} OPT*
+      #{$0} OPT* -{-parse,p,-compile,c,-js,j,-lscodegen} OPT*
       #{$0} {OPT,ARG}* -{-eval,e} {OPT,ARG}* -- ARG*
 
   """
@@ -204,7 +204,7 @@ if options.help
   console.log """
 
     Unless instructed otherwise (--{input,watch,cli}), `#{$0}` will operate on stdin/stdout.
-    When none of -{-parse,p,-compile,c,-js,j,-eval,e,-cscodegen,-repl} are given
+    When none of -{-parse,p,-compile,c,-js,j,-eval,e,-lscodegen,-repl} are given
       If positional arguments were given
         * --eval is implied
         * the first positional argument is used as an input filename
@@ -266,8 +266,24 @@ else
       console.error inspect result.toJSON()
 
     # cs code gen
-    if options.cscodegen
-      try result = cscodegen.generate result
+    if options.lscodegen
+      handleNodes = (node, o) ->
+        if node.className is 'AssignOp' and node.assignee.className is 'Identifier'
+          name = node.assignee.data
+          if name in o
+            node.reassign = true
+          else
+            o.push name
+        o = o[..]
+        for k, child of node when child.instanceof?
+          handleNodes child, o
+        for k in node.listMembers
+          for child in node[k]
+            handleNodes child, o
+
+      handleNodes result, []
+      # preprocess result
+      try result = lscodegen.generate result
       catch e
         console.error (e.stack or e.message)
         process.exit 1
