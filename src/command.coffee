@@ -278,7 +278,7 @@ else
           else
             o.push name
             inFunc.push name
-        for k, child of node when child.instanceof?
+        for k, child of node when child?.instanceof?
           handleNodes child, o, inFunc
         for k in node.listMembers
           for child in node[k]
