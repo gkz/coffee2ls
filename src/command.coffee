@@ -265,7 +265,7 @@ else
       console.error "### #{if options.optimise then 'OPTIMISED' else 'PARSED'} CS-AST ###"
       console.error inspect result.toJSON()
 
-    # cs code gen
+    # lscodegen
     if options.lscodegen
       handleNodes = (node, o, inFunc) ->
         if node.className is 'Function'
