@@ -1,5 +1,5 @@
 {
-  "name": "coffee-to-livescript",
+  "name": "coffee2ls",
   "author": "George Zahariev",
   "version": "0.0.1",
   "homepage": "https://github.com/gkz/coffee-to-livescript",
@@ -14,7 +14,7 @@
   ],
   "main": "./lib/coffee-script/module",
   "bin": {
-    "coffee-to-livescript": "./bin/coffee-to-livescript"
+    "coffee2ls": "./bin/coffee2ls"
   },
   "repository": {
     "type": "git",

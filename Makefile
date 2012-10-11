@@ -9,7 +9,7 @@ ROOT = $(shell pwd)
 
 COFFEE = ../CoffeeScriptRedux/bin/coffee --js --bare
 PEGJS = node_modules/.bin/pegjs --track-line-and-column --cache
-MOCHA = node_modules/.bin/mocha --compilers coffee:../CoffeeScriptRedux/. -u tdd
+MOCHA = node_modules/.bin/mocha --compilers coffee:../coffee2ls/. -u tdd
 MINIFIER = node_modules/.bin/uglifyjs --no-copyright --mangle-toplevel --reserved-names require,module,exports,global,window
 
 all: $(LIB)
@@ -56,6 +56,9 @@ lib/coffee-script/%.js: src/%.coffee lib/coffee-script/bootstrap/%.js bootstraps
 .PHONY: test coverage install loc clean
 
 test: $(LIB) $(TESTS)
+	$(MOCHA) -R dot
+
+xtest: $(TESTS)
 	$(MOCHA) -R dot
 
 coverage: $(LIB)

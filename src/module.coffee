@@ -7,9 +7,10 @@ Nodes = require './nodes'
 Parser = require './parser'
 {Optimiser} = require './optimiser'
 {Compiler} = require './compiler'
-cscodegen = try require 'cscodegen'
+lscodegen = try require 'lscodegen'
 escodegen = try require 'escodegen'
 uglifyjs = try require 'uglify-js'
+LiveScript = require 'LiveScript'
 
 
 CoffeeScript = null
@@ -52,6 +53,12 @@ module.exports =
   cs: (csAst, options) ->
     # TODO: opt: format (default: nice defaults)
 
+  ls: (csAst, options) ->
+    lscodegen.generate csAst
+
+  ls2js: (code) ->
+    LiveScript.compile code
+
   js: (jsAst, options = {}) ->
     # TODO: opt: minify (default: no)
     throw new Error 'escodegen not found: run `npm install escodegen`' unless escodegen?
@@ -71,7 +78,9 @@ CoffeeScript = module.exports.CoffeeScript = module.exports
 
 require.extensions['.coffee'] = (module, filename) ->
   input = fs.readFileSync filename, 'utf8'
-  csAst = CoffeeScript.parse input
-  jsAst = CoffeeScript.compile csAst
-  js = CoffeeScript.js jsAst
+  csAst = CoffeeScript.parse input, {optimise: no}
+  ls = CoffeeScript.ls csAst
+  console.log ls
+  js = CoffeeScript.ls2js ls
+  console.log js
   module._compile js, filename
