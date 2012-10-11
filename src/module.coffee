@@ -53,7 +53,6 @@ module.exports =
   cs: (csAst, options) ->
     # TODO: opt: format (default: nice defaults)
 
-
   ls: (csAst, options) ->
     handleNodes = (node, o, inFunc) ->
       if node.className is 'Function'
@@ -73,6 +72,7 @@ module.exports =
       if push
         o.push name
         inFunc.push name
+      undefined
 
     handleNodes csAst, [], []
     lscodegen.generate csAst
@@ -101,7 +101,5 @@ require.extensions['.coffee'] = (module, filename) ->
   input = fs.readFileSync filename, 'utf8'
   csAst = CoffeeScript.parse input, {optimise: no}
   ls = CoffeeScript.ls csAst
-  console.log ls
   js = CoffeeScript.ls2js ls
-  console.log js
   module._compile js, filename
