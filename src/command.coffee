@@ -267,27 +267,7 @@ else
 
     # lscodegen
     if options.lscodegen
-      handleNodes = (node, o, inFunc) ->
-        if node.className is 'Function'
-          o = o[..]
-          inFunc = []
-        if node.className is 'AssignOp' and node.assignee.className is 'Identifier'
-          name = node.assignee.data
-          if name in o and name not in inFunc
-            node.reassign = true
-          else
-            o.push name
-            inFunc.push name
-        for k, child of node when child?.instanceof?
-          handleNodes child, o, inFunc
-        for k in node.listMembers
-          for child in node[k]
-            handleNodes child, o, inFunc
-
-      handleNodes result, [], []
-
-      # preprocess result
-      try result = lscodegen.generate result
+      try result = CoffeeScript.ls result, options
       catch e
         console.error (e.stack or e.message)
         process.exit 1
