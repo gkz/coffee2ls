@@ -59,12 +59,11 @@ suite 'Scope', ->
       ok not p
     fn nonce
 
-  # DISABLED DUE TO BUG: see issue #46
-  #test 'declarations in a loop used as a value', ->
-  #  a = 1
-  #  a = while a--
-  #    b = 1
-  #  ok b
+  test 'declarations in a loop used as a value', ->
+    a = 1
+    a = while a--
+      b = 1
+    ok b
 
   test 'loop iterators available within the loop', ->
     for v, k in [1]
@@ -72,13 +71,13 @@ suite 'Scope', ->
       ok not k
     return
 
-  test 'loop iterators available outside the loop (ew)', ->
-    # FAIL
-    #fn = ->
-    #for v, k in [1]
-    #  fn()
-    #ok v
-    #ok not k
+  # FAIL
+  #test 'loop iterators available outside the loop (ew)', ->
+  # fn = ->
+  # for v, k in [1]
+  #   fn()
+  # ok v
+  # ok not k
 
   test '`do` acts as `let`', ->
     outerNonce = nonce = {}
