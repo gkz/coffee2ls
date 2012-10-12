@@ -15,24 +15,24 @@ suite 'Function Invocation', ->
     eq a, (id a)
     eq c, (id a, b, c)[2]
 
-  #test "passing arguments on separate lines", ->
-  #  a = {}
-  #  b = {}
-  #  c = {}
-  #  ok(id(
-  #    a
-  #    b
-  #    c
-  #  )[1] is b)
-  #  eq(0, id(
-  #    0
-  #    10
-  #  )[0])
-  #  eq(a,id(
-  #    a
-  #  ))
-  #  eq b,
-  #  (id b)
+  test "passing arguments on separate lines", ->
+    a = {}
+    b = {}
+    c = {}
+    ok(id(
+      a
+      b
+      c
+    )[1] is b)
+    eq(0, id(
+      0
+      10
+    )[0])
+    eq(a,id(
+      a
+    ))
+    eq b,
+    (id b)
 
   test "optional parens can be used in a nested fashion", ->
     call = (func) -> func()
@@ -74,13 +74,13 @@ suite 'Function Invocation', ->
     eq nonce, identityWrap(identityWrap(nonce))()()
     eq nonce, (identityWrap identityWrap nonce)()()
 
-  #test "Multi-blocks with optional parens.", ->
-  #  fn = (arg) -> arg
-  #  result = fn( ->
-  #    fn ->
-  #      "Wrapped"
-  #  )
-  #  ok result()() is 'Wrapped'
+  test "Multi-blocks with optional parens.", ->
+    fn = (arg) -> arg
+    result = fn( ->
+      fn ->
+        "Wrapped"
+    )
+    ok result()() is 'Wrapped'
 
   test "method calls", ->
     fnId = (fn) -> -> fn.apply this, arguments
@@ -108,18 +108,18 @@ suite 'Function Invocation', ->
     fn.withAt()
     fn.withThis()
 
-  #test "Trying an implicit object call with a trailing function.", ->
-  #  a = null
-  #  meth = (arg, obj, func) -> a = [obj.a, arg, func()].join ' '
-  #  meth 'apple', b: 1, a: 13, ->
-  #    'orange'
-  #  ok a is '13 apple orange'
+  test "Trying an implicit object call with a trailing function.", ->
+    a = null
+    meth = (arg, obj, func) -> a = [obj.a, arg, func()].join ' '
+    meth 'apple', b: 1, a: 13, ->
+      'orange'
+    ok a is '13 apple orange'
 
-  #test "Ensure that empty functions don't return mistaken values.", ->
-  #  obj = {func: (@param, @rest...) ->}
-  #  ok obj.func(101, 102, 103, 104) is undefined
-  #  ok obj.param is 101
-  #  ok obj.rest.join(' ') is '102 103 104'
+  test "Ensure that empty functions don't return mistaken values.", ->
+    obj = {func: (@param, @rest...) ->}
+    ok obj.func(101, 102, 103, 104) is undefined
+    ok obj.param is 101
+    ok obj.rest.join(' ') is '102 103 104'
 
   #test "Passing multiple functions without paren-wrapping is legal, and should compile.", ->
   #  sum = (one, two) -> one() + two()
@@ -192,12 +192,12 @@ suite 'Function Invocation', ->
   #    .length
   #  ok result is 1
 
-  #test "Test implicit calls in functions in parens:", ->
-  #  result = ((val) ->
-  #    [].push val
-  #    val
-  #  )(10)
-  #  ok result is 10
+  test "Test implicit calls in functions in parens:", ->
+    result = ((val) ->
+      [].push val
+      val
+    )(10)
+    ok result is 10
 
   #test "Ensure that chained calls with indented implicit object literals below are alright.", ->
   #  result = null
@@ -226,11 +226,11 @@ suite 'Function Invocation', ->
   #    101
   #  eq func(), 101
 
-  #test "Implicit objects with number arguments.", ->
-  #  func = (x, y) -> y
-  #  obj =
-  #    prop: func "a", 1
-  #  ok obj.prop is 1
+  test "Implicit objects with number arguments.", ->
+    func = (x, y) -> y
+    obj =
+      prop: func "a", 1
+    ok obj.prop is 1
 
   test "Non-spaced unary and binary operators should cause a function call.", ->
     func = (val) -> val + 1
@@ -249,20 +249,20 @@ suite 'Function Invocation', ->
     contextTest.apply null, array
     contextTest array...
 
-  #test "jashkenas/coffee-script#904: Destructuring function arguments with same-named variables in scope", ->
-  #  a = b = nonce = {}
-  #  fn = ([a,b]) -> {a:a,b:b}
-  #  result = fn([c={},d={}])
-  #  eq c, result.a
-  #  eq d, result.b
-  #  eq nonce, a
-  #  eq nonce, b
+  test "jashkenas/coffee-script#904: Destructuring function arguments with same-named variables in scope", ->
+    a = b = nonce = {}
+    fn = ([a,b]) -> {a:a,b:b}
+    result = fn([c={},d={}])
+    eq c, result.a
+    eq d, result.b
+    eq nonce, a
+    eq nonce, b
 
-  #test "Simple Destructuring function arguments with same-named variables in scope", ->
-  #  x = 1
-  #  f = ([x]) -> x
-  #  eq f([2]), 2
-  #  eq x, 1
+  test "Simple Destructuring function arguments with same-named variables in scope", ->
+    x = 1
+    f = ([x]) -> x
+    eq f([2]), 2
+    eq x, 1
 
   test "caching base value", ->
     obj = {index: 0, 0: {method: -> this is obj[0]}}
@@ -368,13 +368,13 @@ suite 'Function Invocation', ->
     eq nonce, obj.method()
     eq nonce, obj.property
 
-  #test "don't wrap 'pure' statements in a closure", ->
-  #  nonce = {}
-  #  items = [0, 1, 2, 3, nonce, 4, 5]
-  #  fn = (items) ->
-  #    for item in items
-  #      return item if item is nonce
-  #  eq nonce, fn items
+  test "don't wrap 'pure' statements in a closure", ->
+    nonce = {}
+    items = [0, 1, 2, 3, nonce, 4, 5]
+    fn = (items) ->
+      for item in items
+        return item if item is nonce
+    eq nonce, fn items
 
   test "usage of `new` is careful about where the invocation parens end up", ->
     #eq 'object', typeof new try Array
@@ -403,25 +403,25 @@ suite 'Function Invocation', ->
       'false'
     eq result, 'true'
 
-    #save try
-    #  doesnt exist
-    #catch error
-    #  'caught'
-    #eq result, 'caught'
-    #
-    #save try doesnt(exist) catch error then 'caught2'
-    #eq result, 'caught2'
+    save try
+      doesnt exist
+    catch error
+      'caught'
+    eq result, 'caught'
+
+    save try doesnt(exist) catch error then 'caught2'
+    eq result, 'caught2'
 
   test "jashkenas/coffee-script#1420: things like `(fn() ->)`; there are no words for this one", ->
     fn = -> (f) -> f()
     nonce = {}
     eq nonce, (fn() -> nonce)
 
-  test "jashkenas/coffee-script#1416: don't omit one 'new' when compiling 'new new'", ->
-    # FAIL
-    #nonce = {}
-    #obj = new new -> -> {prop: nonce}
-    #eq obj.prop, nonce
+  # FAIL
+  #test "jashkenas/coffee-script#1416: don't omit one 'new' when compiling 'new new'", ->
+  #  nonce = {}
+  #  obj = new new -> -> {prop: nonce}
+  #  eq obj.prop, nonce
 
   test "jashkenas/coffee-script#1416: don't omit one 'new' when compiling 'new new fn()()'", ->
     nonce = {}
