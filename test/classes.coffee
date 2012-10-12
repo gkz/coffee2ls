@@ -330,11 +330,10 @@ suite 'Classes', ->
 
       eq result, B
 
-    # FAIL
-    #test 'jashkenas/coffee-script#1966: external constructors should produce their return value', ->
-    #  ctor = -> {}
-    #  class A then constructor: ctor
-    #  ok (new A) not instanceof A
+    test 'jashkenas/coffee-script#1966: external constructors should produce their return value', ->
+      ctor = -> {}
+      class A then constructor: ctor
+      ok (new A) not instanceof A
 
     #test 'jashkenas/coffee-script#1534: class then 'use strict'', ->
     #  # [14.1 Directive Prologues and the Use Strict Directive](http://es5.github.com/#x14.1)
