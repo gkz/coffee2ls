@@ -46,8 +46,9 @@ module.exports =
       throw e unless e instanceof Parser.SyntaxError
       throw new Error formatParserError preprocessed, e
 
-  compile: (csAst, options) ->
-    Compiler.compile csAst, options
+  compile: (js, options) ->
+    @ls2js @ls @parse js
+    #Compiler.compile csAst, options
 
   # TODO
   cs: (csAst, options) ->
