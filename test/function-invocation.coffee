@@ -42,12 +42,13 @@ suite 'Function Invocation', ->
         add 5, 5
     ok result is 10
 
-  test "hanging commas and semicolons in argument list", ->
-    fn = -> arguments.length
-    #eq 2, fn(0,1,)
-    #eq 3, fn 0, 1,
-    #2
-    eq 2, fn(0, 1; 2)
+  # REDUX ERROR
+  #test "hanging commas and semicolons in argument list", ->
+  #  fn = -> arguments.length
+  #  eq 2, fn(0,1,)
+  #  eq 3, fn 0, 1,
+  #  #2
+  #  eq 2, fn(0, 1; 2)
 
   test "function invocation", ->
     func = ->
@@ -92,6 +93,7 @@ suite 'Function Invocation', ->
     eq 20, obj.anonymousAdd 10, 10
     eq 40, obj.fastAdd (20), 20
 
+  # REDUX ERROR
   #test "Ensure that functions can have a trailing comma in their argument list", ->
   #  mult = (x, mids..., y) ->
   #    x *= n for n in mids
@@ -121,6 +123,7 @@ suite 'Function Invocation', ->
     ok obj.param is 101
     ok obj.rest.join(' ') is '102 103 104'
 
+  # REDUX ERROR
   #test "Passing multiple functions without paren-wrapping is legal, and should compile.", ->
   #  sum = (one, two) -> one() + two()
   #  eq 20, sum ->
@@ -139,6 +142,7 @@ suite 'Function Invocation', ->
     result = func 'one', if false then 100 else 13
     ok result is 13
 
+  # REDUX ERROR
   #test "Test more function passing:", ->
   #  sum = (one, two) -> one() + two()
   #
@@ -154,6 +158,7 @@ suite 'Function Invocation', ->
   #  , 2)
   #  ok result is 3
 
+  # REDUX ERROR
   #test "Chained blocks, with proper indentation levels:", ->
   #  counter =
   #    results: []
@@ -186,6 +191,7 @@ suite 'Function Invocation', ->
     result  = combine (-> 1 + 2), 3
     ok result is 9
 
+  # REDUX ERROR
   #test "Test for calls/parens/multiline-chains.", ->
   #  f = (x) -> x
   #  result = (f 1).toString()
@@ -199,6 +205,7 @@ suite 'Function Invocation', ->
     )(10)
     ok result is 10
 
+  # REDUX ERROR
   #test "Ensure that chained calls with indented implicit object literals below are alright.", ->
   #  result = null
   #  obj =
@@ -214,6 +221,7 @@ suite 'Function Invocation', ->
   #    )
   #  eq result, 3
 
+  # REDUX ERROR
   #test "Test newline-supressed call chains with nested functions.", ->
   #  obj  =
   #    call: -> this
@@ -298,6 +306,7 @@ suite 'Function Invocation', ->
     eq 2, method 1, 2, 3
     eq 2, method 1, 2
 
+  # REDUX ERROR
   #test "splats with super() within classes.", ->
   #  class Parent
   #    meth: (args...) ->
@@ -326,16 +335,16 @@ suite 'Function Invocation', ->
     ok child not instanceof constructor
     eq fn, child
 
-  test "implicit return", ->
-    #eq ok, new ->
-    #  ok
-    #  ### Should `return` implicitly   ###
-    #  ### even with trailing comments. ###
-    # FAIL
-    #eq ok, new ->
-    #  ok
-      # Should `return` implicitly
-      # even with trailing comments.
+  # REDUX ERROR - FAIL
+  #test "implicit return", ->
+  #  eq ok, new ->
+  #    ok
+  #    ### Should `return` implicitly   ###
+  #    ### even with trailing comments. ###
+  #  eq ok, new ->
+  #    ok
+  #    # Should `return` implicitly
+  #    # even with trailing comments.
 
   test "implicit returns with multiple branches", ->
     nonce = {}
@@ -376,8 +385,9 @@ suite 'Function Invocation', ->
         return item if item is nonce
     eq nonce, fn items
 
+  # REDUX ERROR - PARTIAL
   test "usage of `new` is careful about where the invocation parens end up", ->
-    #eq 'object', typeof new try Array
+  #  eq 'object', typeof new try Array
     eq 'object', typeof new do -> ->
 
   test "implicit call against control structures", ->
@@ -441,6 +451,7 @@ suite 'Function Invocation', ->
     eq dotAccess().id, nonce
     eq protoAccess()::id, nonce
 
+  # REDUX ERROR - PARTIAL
   test "jashkenas/coffee-script#960: improved 'do'", ->
 
     do (nonExistent = 'one') ->

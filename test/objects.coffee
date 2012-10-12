@@ -67,6 +67,7 @@ suite 'Object Literals', ->
 
   suite 'Implicit Objects', ->
 
+    # REDUX ERROR
     #test 'implicit object literals', ->
     #
     #  obj =
@@ -91,8 +92,10 @@ suite 'Object Literals', ->
       pluck = (x) -> x.a
       eq 100, pluck pluck pluck a: a: a: 100
 
+    # REDUX ERROR
     #test 'explicit objects nested under implicit objects', ->
 
+    # REDUX ERROR
     #test 'invoking functions with implicit object literals', ->
     #  generateGetter = (prop) -> (obj) -> obj[prop]
     #  getA = generateGetter 'a'
@@ -164,6 +167,7 @@ suite 'Object Literals', ->
       eq nonce0, obj.a.b().c
       eq nonce1, obj.d
 
+    # REDUX ERROR
     #test 'jashkenas/coffee-script#1871: Special case for IMPLICIT_END in the middle of an implicit object', ->
     #  result = 'result'
     #  ident = (x) -> x
@@ -178,6 +182,7 @@ suite 'Object Literals', ->
     #
     #  eq result.two.join(' '), '2 2 2'
 
+    # REDUX ERROR
     #test 'jashkenas/coffee-script#1961, jashkenas/coffee-script#1974, regression with compound assigning to an implicit object', ->
     #
     #  obj = null

@@ -80,6 +80,7 @@ suite 'Arrays', ->
       b = [(x) -> x * x, ->, (x) ->  x, ->]
       ok b.length is 4
 
+    # REDUX ERROR
     #test 'dedented comma style', ->
     #  eq 3, [
     #    0

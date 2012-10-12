@@ -54,6 +54,7 @@ suite 'Assignment', ->
       eq 5, b
       eq 3, c
 
+    # REDUX ERROR
     # *note: this test could still use refactoring*
     #test "compound assignment should be careful about caching variables", ->
     #  count = 0
@@ -83,6 +84,7 @@ suite 'Assignment', ->
     #  eq 5, base.five
     #  eq 5, count
 
+    # REDUX ERROR
     #test "compound assignment with implicit objects", ->
     #  obj = undefined
     #  obj ?=

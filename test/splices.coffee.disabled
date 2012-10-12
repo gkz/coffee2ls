@@ -1,5 +1,6 @@
 suite 'Splices', ->
 
+  # REDUX ERROR
   test "basic splicing", ->
     ary = [0..9]
     ary[5..9] = [0, 0, 0]
@@ -9,6 +10,7 @@ suite 'Splices', ->
     ary[2...8] = []
     arrayEq [0, 1, 8, 9], ary
 
+  # REDUX ERROR
   test "unbounded splicing", ->
     ary = [0..9]
     ary[3..] = [9, 8, 7]
@@ -20,6 +22,7 @@ suite 'Splices', ->
     ary[..] = [1, 2, 3]
     arrayEq [1, 2, 3], ary
 
+  # REDUX ERROR
   test "splicing with variables as endpoints", ->
     [a, b] = [1, 8]
 
@@ -31,6 +34,7 @@ suite 'Splices', ->
     ary[a...b] = [5]
     arrayEq [0, 5, 8, 9], ary
 
+  # REDUX ERROR
   test "splicing with expressions as endpoints", ->
     [a, b] = [1, 3]
 
@@ -42,6 +46,7 @@ suite 'Splices', ->
     ary[a+1...2*b+1] = [4]
     arrayEq [0, 1, 4, 7, 8, 9], ary
 
+  # REDUX ERROR
   test "splicing to the end, against a one-time function", ->
     ary = null
     fn = ->
@@ -54,6 +59,7 @@ suite 'Splices', ->
 
     arrayEq ary, [1]
 
+  # REDUX ERROR
   test "the return value of a splice literal should be the RHS", ->
     ary = [0, 0, 0]
     eq (ary[0..1] = 2), 2
@@ -63,6 +69,7 @@ suite 'Splices', ->
 
     arrayEq [ary[0..0] = 0], [0]
 
+  # REDUX ERROR
   test "#1723: operator precedence in unbounded splice compilation", ->
     n = 4 # some truthy number in `list`
 

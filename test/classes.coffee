@@ -20,6 +20,7 @@ suite 'Classes', ->
 
       delete Function.prototype.new
 
+    # REDUX ERROR
     #test 'basic classes, again, but in the manual prototype style', ->
     #
     #  Base = ->
@@ -111,6 +112,7 @@ suite 'Classes', ->
       ok Static.static.one is 1
       ok Static.static.two is 2
 
+    # REDUX ERROR
     #test 'classes with static-level implicit objects', ->
     #
     #  class A
@@ -148,6 +150,7 @@ suite 'Classes', ->
       eq (new One).value, 1
       eq (new Two).value, 2
 
+    # REDUX ERROR
     #test 'exectuable class bodies', ->
     #
     #  class A
@@ -335,6 +338,7 @@ suite 'Classes', ->
       class A then constructor: ctor
       ok (new A) not instanceof A
 
+    # REDUX ERROR
     #test 'jashkenas/coffee-script#1534: class then 'use strict'', ->
     #  # [14.1 Directive Prologues and the Use Strict Directive](http://es5.github.com/#x14.1)
     #  nonce = {}
@@ -486,6 +490,7 @@ suite 'Classes', ->
 
   suite 'Inheritance and Super', ->
 
+    # REDUX ERROR
     #test 'classes with a four-level inheritance chain', ->
     #
     #  class Base
@@ -527,6 +532,7 @@ suite 'Classes', ->
     #
     #  ok (new ThirdChild).array.join(' ') is '1 2 3'
 
+    # REDUX ERROR
     #test 'constructors with inheritance and super', ->
     #
     #  identity = (f) -> f
@@ -545,6 +551,7 @@ suite 'Classes', ->
     #
     #  ok (new SubClass).prop is 'top-super-sub'
 
+    # REDUX ERROR
     #test 'super with plain ol' functions as the original constructors', ->
     #
     #  TopClass = (arg) ->
@@ -564,6 +571,7 @@ suite 'Classes', ->
     #
     #  ok (new SubClass).prop is 'top-super-sub'
 
+    # REDUX ERROR
     #test 'super() calls in constructors of classes that are defined as object properties', ->
     #
     #  class Hive
@@ -575,6 +583,7 @@ suite 'Classes', ->
     #  maya = new Hive.Bee 'Maya'
     #  ok maya.name is 'Maya'
 
+    # REDUX ERROR
     #test 'calling super and passing along all arguments', ->
     #
     #  class Parent
@@ -587,6 +596,7 @@ suite 'Classes', ->
     #  c.method 1, 2, 3, 4
     #  ok c.args.join(' ') is '1 2 3 4'
 
+    # REDUX ERROR
     #test '`class extends this`', ->
     #
     #  class A
@@ -609,6 +619,7 @@ suite 'Classes', ->
         constructor: ->
       eq nonce, B::prop
 
+    # REDUX ERROR
     #test 'jashkenas/coffee-script#1380: `super` with reserved names', ->
     #  class C
     #    do: -> super
@@ -625,6 +636,7 @@ suite 'Classes', ->
       class B extends id A
       eq nonce, (new B).nonce
 
+    # REDUX ERROR
     #test 'jashkenas/coffee-script#1598: super works for static methods too', ->
     #
     #  class Parent

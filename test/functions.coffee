@@ -183,6 +183,7 @@ suite 'Function Literals', ->
       g = -> f
       eq nonce, g(f) -> nonce
 
+    # REDUX ERROR
     #test "#2258: allow whitespace-style parameter lists in function definitions", ->
     #  func = (
     #    a, b, c
