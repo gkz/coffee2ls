@@ -244,9 +244,9 @@ suite 'Operators', ->
     a = 0
     ok 1 > a++ < 1
 
-  #test "jashkenas/coffee-script#891: incorrect inversion of chained comparisons", ->
-  #  ok (true unless 0 > 1 > 2)
-  #  ok (true unless (NaN = 0/0) < 0/0 < NaN)
+  test "jashkenas/coffee-script#891: incorrect inversion of chained comparisons", ->
+    ok (true unless 0 > 1 > 2)
+    ok (true unless (NaN = 0/0) < 0/0 < NaN)
 
   test "jashkenas/coffee-script#1234: Applying a splat to :: applies the splat to the wrong object", ->
     nonce = {}
@@ -265,10 +265,10 @@ suite 'Operators', ->
     x = 2
     eq (- --x), -1
 
-  #test "Regression with implicit calls against an indented assignment", ->
-  #  eq 1, a =
-  #    1
-  #  eq a, 1
+  test "Regression with implicit calls against an indented assignment", ->
+    eq 1, a =
+      1
+    eq a, 1
 
   test "jashkenas/coffee-script#2155: conditional assignment to a closure", ->
     x = null
