@@ -2,23 +2,23 @@ suite 'Classes', ->
 
   suite 'Class Definition', ->
 
-    #test 'Overriding the static property new doesn't clobber Function::new', ->
-    #
-    #  class OneClass
-    #    @new: 'new'
-    #    function: 'function'
-    #    constructor: (name) -> @name = name
-    #
-    #  class TwoClass extends OneClass
-    #  delete TwoClass.new
-    #
-    #  Function.prototype.new = -> new this arguments...
-    #
-    #  ok (TwoClass.new('three')).name is 'three'
-    #  ok (new OneClass).function is 'function'
-    #  ok OneClass.new is 'new'
-    #
-    #  delete Function.prototype.new
+    test "Overriding the static property new doesn't clobber Function::new", ->
+
+      class OneClass
+        @new: 'new'
+        function: 'function'
+        constructor: (name) -> @name = name
+
+      class TwoClass extends OneClass
+      delete TwoClass.new
+
+      Function.prototype.new = -> new this arguments...
+
+      ok (TwoClass.new('three')).name is 'three'
+      ok (new OneClass).function is 'function'
+      ok OneClass.new is 'new'
+
+      delete Function.prototype.new
 
     #test 'basic classes, again, but in the manual prototype style', ->
     #
@@ -101,15 +101,15 @@ suite 'Classes', ->
       instance = new obj.klass
       ok instance.method() is 'value'
 
-    #test 'Implicit objects as static properties', ->
-    #
-    #  class Static
-    #    @static =
-    #      one: 1
-    #      two: 2
-    #
-    #  ok Static.static.one is 1
-    #  ok Static.static.two is 2
+    test 'Implicit objects as static properties', ->
+
+      class Static
+        @static =
+          one: 1
+          two: 2
+
+      ok Static.static.one is 1
+      ok Static.static.two is 2
 
     #test 'classes with static-level implicit objects', ->
     #
@@ -423,19 +423,19 @@ suite 'Classes', ->
       m = new Mini
       eq (func() for func in m.generate()).join(' '), '10 10 10'
 
-    #test 'contructor called with varargs', ->
-    #
-    #  class Connection
-    #    constructor: (one, two, three) ->
-    #      [@one, @two, @three] = [one, two, three]
-    #
-    #    out: ->
-    #      "#{@one}-#{@two}-#{@three}"
-    #
-    #  list = [3, 2, 1]
-    #  conn = new Connection list...
-    #  ok conn instanceof Connection
-    #  ok conn.out() is '3-2-1'
+    test 'contructor called with varargs', ->
+
+      class Connection
+        constructor: (one, two, three) ->
+          [@one, @two, @three] = [one, two, three]
+
+        out: ->
+          "#{@one}-#{@two}-#{@three}"
+
+      list = [3, 2, 1]
+      conn = new Connection list...
+      ok conn instanceof Connection
+      ok conn.out() is '3-2-1'
 
     test 'classes wrapped in decorators', ->
 
@@ -449,32 +449,33 @@ suite 'Classes', ->
       ok (new Test).prop  is 'value'
       ok (new Test).prop2 is 'value2'
 
-    #test 'ensure that constructors invoked with splats return a new object', ->
-    #
-    #  args = [1, 2, 3]
-    #  Type = (@args) ->
-    #  type = new Type args
-    #
-    #  ok type and type instanceof Type
-    #  ok type.args and type.args instanceof Array
-    #  ok v is args[i] for v, i in type.args
-    #
-    #  Type1 = (@a, @b, @c) ->
-    #  type1 = new Type1 args...
-    #
-    #  ok type1 instanceof   Type1
-    #  eq type1.constructor, Type1
-    #  ok type1.a is args[0] and type1.b is args[1] and type1.c is args[2]
-    #
-    #  # Ensure that constructors invoked with splats cache the function.
-    #  called = 0
-    #  get = -> if called++ then false else class Type
-    #  new get() args...
+    test 'ensure that constructors invoked with splats return a new object', ->
+
+      args = [1, 2, 3]
+      Type = (@args) ->
+      type = new Type args
+
+      ok type and type instanceof Type
+      ok type.args and type.args instanceof Array
+      ok v is args[i] for v, i in type.args
+
+      Type1 = (@a, @b, @c) ->
+      type1 = new Type1 args...
+
+      ok type1 instanceof   Type1
+      eq type1.constructor, Type1
+      ok type1.a is args[0] and type1.b is args[1] and type1.c is args[2]
+
+      # Ensure that constructors invoked with splats cache the function.
+      called = 0
+      get = -> if called++ then false else class Type
+      new get() args...
 
     test '`new` shouldn\'t add extra parens', ->
 
       ok new Date().constructor is Date
 
+    # FAIL
     # TODO: this test belongs with the operator tests
     #test '`new` works against bare function', ->
     #
