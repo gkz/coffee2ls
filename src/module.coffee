@@ -54,25 +54,6 @@ module.exports =
     # TODO: opt: format (default: nice defaults)
 
   ls: (csAst, options) ->
-    handleNodes = (node, o, inFunc) ->
-      if node.className is 'Function'
-        o = o[..]
-        inFunc = []
-      if node.className in ['AssignOp', 'ExistsAssignOp'] and node.assignee.className is 'Identifier'
-        name = node.assignee.data
-        if name in o and name not in inFunc
-          node.reassign = true
-        else
-          o.push name
-          inFunc.push name
-      for k, child of node when child?.instanceof?
-        handleNodes child, o, inFunc
-      for k in node.listMembers
-        for child in node[k]
-          handleNodes child, o, inFunc
-      undefined
-
-    handleNodes csAst, [], []
     lscodegen.generate csAst
 
   ls2js: (code) ->
