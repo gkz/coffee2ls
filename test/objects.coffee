@@ -49,11 +49,11 @@ suite 'Object Literals', ->
       {f: -> a = true}.f() + 1
       ok a
 
-    #test 'jashkenas/coffee-script#1274: `{} = a()` should not optimise away a()', ->
-    #  a = false
-    #  fn = -> a = true
-    #  {} = fn()
-    #  ok a
+    test 'jashkenas/coffee-script#1274: `{} = a()` should not optimise away a()', ->
+      a = false
+      fn = -> a = true
+      {} = fn()
+      ok a
 
     test 'jashkenas/coffee-script#1436: `for` etc. work as normal property names', ->
       obj = {}
@@ -61,9 +61,9 @@ suite 'Object Literals', ->
       obj.for = 'for' of obj
       ok 'for' of obj
 
-    #test 'jashkenas/coffee-script#1513: Top level bare objects need to be wrapped in parens for unary and existence ops', ->
-    #  doesNotThrow -> CoffeeScript.run '{}?', bare: true
-    #  doesNotThrow -> CoffeeScript.run '{}.a++', bare: true
+    test 'jashkenas/coffee-script#1513: Top level bare objects need to be wrapped in parens for unary and existence ops', ->
+      doesNotThrow -> CoffeeScript.run '{}?', bare: true
+      doesNotThrow -> CoffeeScript.run '{}.a++', bare: true
 
   suite 'Implicit Objects', ->
 
@@ -87,9 +87,9 @@ suite 'Object Literals', ->
     #  ok config.development.timeout is 10
     #  ok config.production.timeout  is 1000
 
-    #test 'implicit objects as part of chained calls', ->
-    #  pluck = (x) -> x.a
-    #  eq 100, pluck pluck pluck a: a: a: 100
+    test 'implicit objects as part of chained calls', ->
+      pluck = (x) -> x.a
+      eq 100, pluck pluck pluck a: a: a: 100
 
     #test 'explicit objects nested under implicit objects', ->
 
@@ -153,16 +153,16 @@ suite 'Object Literals', ->
     #
     #  throws -> CoffeeScript.compile 'a = b:1, c'
 
-    #test 'multiple dedentations in implicit object literals', ->
-    #  nonce0 = {}
-    #  nonce1 = {}
-    #  obj =
-    #    a:
-    #      b: ->
-    #        c: nonce0
-    #    d: nonce1
-    #  eq nonce0, obj.a.b().c
-    #  eq nonce1, obj.d
+    test 'multiple dedentations in implicit object literals', ->
+      nonce0 = {}
+      nonce1 = {}
+      obj =
+        a:
+          b: ->
+            c: nonce0
+        d: nonce1
+      eq nonce0, obj.a.b().c
+      eq nonce1, obj.d
 
     #test 'jashkenas/coffee-script#1871: Special case for IMPLICIT_END in the middle of an implicit object', ->
     #  result = 'result'
@@ -196,8 +196,8 @@ suite 'Object Literals', ->
     #
     #  eq obj.four, 4
 
-    #test 'jashkenas/coffee-script#2207: Immediate implicit closes don't close implicit objects', ->
-    #  func = ->
-    #    key: for i in [1, 2, 3] then i
-    #
-    #  eq func().key.join(' '), '1 2 3'
+    test "jashkenas/coffee-script#2207: Immediate implicit closes don't close implicit objects", ->
+      func = ->
+        key: for i in [1, 2, 3] then i
+
+      eq func().key.join(' '), '1 2 3'
