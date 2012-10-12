@@ -47,8 +47,11 @@ module.exports =
       throw new Error formatParserError preprocessed, e
 
   compile: (js, options) ->
-    @ls2js @ls @parse js
+    @ls2js @ls @parse js, options
     #Compiler.compile csAst, options
+
+  run: (js, options) ->
+    eval @compile js, options
 
   # TODO
   cs: (csAst, options) ->
