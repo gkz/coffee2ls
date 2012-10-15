@@ -49,16 +49,14 @@ suite 'Range Literals', ->
     arrayEq [1, 0]   , [1...-1]
     arrayEq [2, 1, 0], [2...-1]
 
-  # FAIL - PARTIAL
   test "ranges with variables as enpoints", ->
     [a, b] = [1, 3]
     arrayEq [1, 2, 3], [a..b]
     arrayEq [1, 2]   , [a...b]
     b = -2
 
-    # must be explicit with by -1 in LS
-    #arrayEq [1, 0, -1, -2], [a..b]
-    #arrayEq [1, 0, -1]    , [a...b]
+    arrayEq [1, 0, -1, -2], [a..b]
+    arrayEq [1, 0, -1]    , [a...b]
 
   test "ranges with expressions as endpoints", ->
     [a, b] = [1, 3]

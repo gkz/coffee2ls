@@ -276,12 +276,12 @@ suite 'Assignment', ->
 
     # FAIL - PARTIAL
     test "#1627: prohibit conditional assignment of undefined variables", ->
-    #  throws (-> CoffeeScript.compile "x ?= 10"),        null, "prohibit (x ?= 10)"
-    #  throws (-> CoffeeScript.compile "x ||= 10"),       null, "prohibit (x ||= 10)"
-    #  throws (-> CoffeeScript.compile "x or= 10"),       null, "prohibit (x or= 10)"
-    #  throws (-> CoffeeScript.compile "do -> x ?= 10"),  null, "prohibit (do -> x ?= 10)"
-    #  throws (-> CoffeeScript.compile "do -> x ||= 10"), null, "prohibit (do -> x ||= 10)"
-    #  throws (-> CoffeeScript.compile "do -> x or= 10"), null, "prohibit (do -> x or= 10)"
+      throws (-> CoffeeScript.compile "x ?= 10"),        null, "prohibit (x ?= 10)"
+      throws (-> CoffeeScript.compile "x ||= 10"),       null, "prohibit (x ||= 10)"
+      throws (-> CoffeeScript.compile "x or= 10"),       null, "prohibit (x or= 10)"
+      throws (-> CoffeeScript.compile "do -> x ?= 10"),  null, "prohibit (do -> x ?= 10)"
+      throws (-> CoffeeScript.compile "do -> x ||= 10"), null, "prohibit (do -> x ||= 10)"
+      throws (-> CoffeeScript.compile "do -> x or= 10"), null, "prohibit (do -> x or= 10)"
       doesNotThrow (-> CoffeeScript.compile "x = null; x ?= 10"),        "allow (x = null; x ?= 10)"
       doesNotThrow (-> CoffeeScript.compile "x = null; x ||= 10"),       "allow (x = null; x ||= 10)"
       doesNotThrow (-> CoffeeScript.compile "x = null; x or= 10"),       "allow (x = null; x or= 10)"
