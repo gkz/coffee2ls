@@ -71,13 +71,12 @@ suite 'Scope', ->
       ok not k
     return
 
-  # FAIL
-  #test 'loop iterators available outside the loop (ew)', ->
-  # fn = ->
-  # for v, k in [1]
-  #   fn()
-  # ok v
-  # ok not k
+  test 'loop iterators available outside the loop (ew)', ->
+    fn = ->
+    for v, k in [1]
+      fn()
+    ok v
+    ok not k
 
   test '`do` acts as `let`', ->
     outerNonce = nonce = {}
