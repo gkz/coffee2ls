@@ -188,21 +188,20 @@ suite 'Classes', ->
       eq robby.power(), 11
       eq robby.speed(), Infinity
 
-    # FAIL
-    #test 'namespaced classes do not reserve their function name in outside scope', ->
-    #
-    #  one = {}
-    #  two = {}
-    #
-    #  class one.Klass
-    #    @label = "one"
-    #
-    #  class two.Klass
-    #    @label = "two"
+    test 'namespaced classes do not reserve their function name in outside scope', ->
 
-    #  eq typeof Klass, 'undefined'
-    #  eq one.Klass.label, 'one'
-    #  eq two.Klass.label, 'two'
+      one = {}
+      two = {}
+
+      class one.Klass
+        @label = "one"
+
+      class two.Klass
+        @label = "two"
+
+      eq typeof Klass, 'undefined'
+      eq one.Klass.label, 'one'
+      eq two.Klass.label, 'two'
 
     test 'nested classes', ->
 
