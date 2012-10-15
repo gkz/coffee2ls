@@ -197,9 +197,8 @@ suite 'Operators', ->
       ok 0 in [1, 1 and 0]
       ok not (0 in [1, 0 or 1])
 
-    # FAIL
-    #test "jashkenas/coffee-script#1630: `in` should check `hasOwnProperty`", ->
-      #ok undefined not in {length: 1}
+    test "jashkenas/coffee-script#1630: `in` should check `hasOwnProperty`", ->
+      ok undefined not in {length: 1}
 
     # REDUX ERROR
     #test "jashkenas/coffee-script#1714: lexer bug with raw range `for` followed by `in`", ->
