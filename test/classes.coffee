@@ -478,13 +478,12 @@ suite 'Classes', ->
 
       ok new Date().constructor is Date
 
-    # FAIL
     # TODO: this test belongs with the operator tests
-    #test '`new` works against bare function', ->
-    #
-    #  eq Date, new ->
-    #    eq this, new => this
-    #    Date
+    test '`new` works against bare function', ->
+
+      eq Date, new ->
+        eq this, new => this
+        Date
 
 
   suite 'Inheritance and Super', ->

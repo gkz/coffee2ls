@@ -335,16 +335,15 @@ suite 'Function Invocation', ->
     ok child not instanceof constructor
     eq fn, child
 
-  # REDUX ERROR - FAIL
-  #test "implicit return", ->
-  #  eq ok, new ->
-  #    ok
-  #    ### Should `return` implicitly   ###
-  #    ### even with trailing comments. ###
-  #  eq ok, new ->
-  #    ok
-  #    # Should `return` implicitly
-  #    # even with trailing comments.
+  test "implicit return", ->
+    eq ok, new ->
+      ok
+      ### Should `return` implicitly   ###
+      ### even with trailing comments. ###
+    eq ok, new ->
+      ok
+      # Should `return` implicitly
+      # even with trailing comments.
 
   test "implicit returns with multiple branches", ->
     nonce = {}
@@ -427,11 +426,10 @@ suite 'Function Invocation', ->
     nonce = {}
     eq nonce, (fn() -> nonce)
 
-  # FAIL
-  #test "jashkenas/coffee-script#1416: don't omit one 'new' when compiling 'new new'", ->
-  #  nonce = {}
-  #  obj = new new -> -> {prop: nonce}
-  #  eq obj.prop, nonce
+  test "jashkenas/coffee-script#1416: don't omit one 'new' when compiling 'new new'", ->
+    nonce = {}
+    obj = new new -> -> {prop: nonce}
+    eq obj.prop, nonce
 
   test "jashkenas/coffee-script#1416: don't omit one 'new' when compiling 'new new fn()()'", ->
     nonce = {}
