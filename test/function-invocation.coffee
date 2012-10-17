@@ -469,3 +469,8 @@ suite 'Function Invocation', ->
     #  eq two, 2
     #  func
     #eq ret, func
+
+  test 'call a for loop', ->
+    f = (x) -> x[0]
+    ok f(x for x in [true])
+    ok f(x and y for x in [true] for y in [true])
