@@ -239,14 +239,20 @@ assignmentExpression
   CompoundAssignmentOperators
     = "**" / "*" / "/" / "%" / "+" / "-" / "<<" / ">>>" / ">>" / AND / OR / "&&" / "||" / "&" / "^" / "|"
   compoundAssignmentOp
-    = left:CompoundAssignable ws0:_ op:CompoundAssignmentOperators "=" ws1:_ right:secondaryExpression {
-        var raw = left.raw + ws0 + op + '=' + ws1 + right.raw;
-        return new CS.CompoundAssignOp(constructorLookup[op].prototype.className, left, right).r(raw).p(line, column, offset);
+    = left:CompoundAssignable ws0:_ op:CompoundAssignmentOperators "=" right:
+      ( t:TERMINDENT e:secondaryExpression d:DEDENT { return {raw: t + e.raw + d, expr: e}; }
+      / t:TERMINATOR? ws1:_ e:secondaryExpression { return {raw: t + ws1 + e.raw, expr: e}; }
+      ) {
+        var raw = left.raw + ws0 + op + '=' + right.raw;
+        return new CS.CompoundAssignOp(constructorLookup[op].prototype.className, left, right.expr).r(raw).p(line, column, offset);
       }
   existsAssignmentOp
-    = left:ExistsAssignable ws0:_ "?=" ws1:_ right:secondaryExpression {
-        var raw = left.raw + ws0 + '?=' + ws1 + right.raw;
-        return new CS.ExistsAssignOp(left, right).r(raw).p(line, column, offset);
+    = left:ExistsAssignable ws0:_ "?=" ws1:_ right:
+      ( t:TERMINDENT e:secondaryExpression d:DEDENT { return {raw: t + e.raw + d, expr: e}; }
+      / t:TERMINATOR? ws1:_ e:secondaryExpression { return {raw: t + ws1 + e.raw, expr: e}; }
+      ) {
+        var raw = left.raw + ws0 + '?=' + right.raw;
+        return new CS.ExistsAssignOp(left, right.expr).r(raw).p(line, column, offset);
       }
 logicalOrExpression
   = left:logicalAndExpression rights:(_ ("||" / OR) !"=" TERMINATOR? _ (expressionworthy / logicalAndExpression))* {
@@ -379,7 +385,7 @@ postfixExpression
         }
       }, expr, ops);
     }
-leftHandSideExpression = callExpression / newExpression
+leftHandSideExpression = callExpression / newExpression / superExpression
   argumentList
     = soaked:"?"? "(" ws0:_ a:argumentListContents? ws1:_ ")" {
         return 0,
@@ -422,6 +428,14 @@ callExpression
         fn = new CS.FunctionApplication(fn, secondaryArgs.list).r(fn.raw + secondaryArgs.raw).p(line, column, offset);
       return fn;
     }
+superExpression
+  = SUPER args:argumentList {
+      return new CS.Super(args.operands[0]).r('super' + args.raw).p(line, column, offset);
+    }
+  / SUPER args:secondaryArgumentList? {
+      var a = args ? args.list : [];
+      return new CS.Super(a).r('super' + args.raw).p(line, column, offset);
+  }
 newExpression
   = memberExpression
   / NEW ws:__ e:(expressionworthy / newExpression / prefixExpression) {
@@ -438,6 +452,7 @@ memberExpression
       var raw = 'new' + ws0 + e.raw + args.raw;
       return new CS.NewOp(e, args.list).r(raw).p(line, column, offset);
     }
+  / superExpression
   memberAccess
     = e:( primaryExpression
       / NEW ws0:__ e:memberExpression args:argumentList { return new CS.NewOp(e, args.operands[0]).r('new' + ws0 + e + args.raw).p(line, column, offset); }
@@ -1069,6 +1084,7 @@ OR = w:"or" !identifierPart { return w; }
 OWN = w:"own" !identifierPart { return w; }
 RETURN = w:"return" !identifierPart { return w; }
 SWITCH = w:"switch" !identifierPart { return w; }
+SUPER = w:"super" !identifierPart { return w; }
 THEN = w:"then" !identifierPart { return w; }
 THIS = w:"this" !identifierPart { return w; }
 THROW = w:"throw" !identifierPart { return w; }

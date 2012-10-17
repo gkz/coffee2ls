@@ -306,16 +306,15 @@ suite 'Function Invocation', ->
     eq 2, method 1, 2, 3
     eq 2, method 1, 2
 
-  # REDUX ERROR
-  #test "splats with super() within classes.", ->
-  #  class Parent
-  #    meth: (args...) ->
-  #      args
-  #  class Child extends Parent
-  #    meth: ->
-  #      nums = [3, 2, 1]
-  #      super nums...
-  #  ok (new Child).meth().join(' ') is '3 2 1'
+  test "splats with super() within classes.", ->
+    class Parent
+      meth: (args...) ->
+        args
+    class Child extends Parent
+      meth: ->
+        nums = [3, 2, 1]
+        super nums...
+    ok (new Child).meth().join(' ') is '3 2 1'
 
   test "jashkenas/coffee-script#1011: passing a splat to a method of a number", ->
     eq '1011', 11.toString [2]...

@@ -182,24 +182,23 @@ suite 'Object Literals', ->
     #
     #  eq result.two.join(' '), '2 2 2'
 
-    # REDUX ERROR
-    #test 'jashkenas/coffee-script#1961, jashkenas/coffee-script#1974, regression with compound assigning to an implicit object', ->
-    #
-    #  obj = null
-    #
-    #  obj ?=
-    #    one: 1
-    #    two: 2
-    #
-    #  eq obj.two, 2
-    #
-    #  obj = null
-    #
-    #  obj or=
-    #    three: 3
-    #    four: 4
-    #
-    #  eq obj.four, 4
+    test 'jashkenas/coffee-script#1961, jashkenas/coffee-script#1974, regression with compound assigning to an implicit object', ->
+
+      obj = null
+
+      obj ?=
+        one: 1
+        two: 2
+
+      eq obj.two, 2
+
+      obj = null
+
+      obj or=
+        three: 3
+        four: 4
+
+      eq obj.four, 4
 
     test "jashkenas/coffee-script#2207: Immediate implicit closes don't close implicit objects", ->
       func = ->
