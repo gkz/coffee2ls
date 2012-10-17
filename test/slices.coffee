@@ -48,7 +48,7 @@ suite 'Slices', ->
     ok str[0..4] is "abcde"
     ok str[-5..] is "vwxyz"
 
-  # REDUX ERROR
+  # REDUX ERROR - if/then/else in range
   #test "#1722: operator precedence in unbounded slice compilation", ->
   #  list = [0..9]
   #  n = 2 # some truthy number in `list`

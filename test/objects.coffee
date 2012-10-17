@@ -67,7 +67,7 @@ suite 'Object Literals', ->
 
   suite 'Implicit Objects', ->
 
-    # REDUX ERROR
+    # REDUX ERROR - imp obj lit
     #test 'implicit object literals', ->
     #
     #  obj =
@@ -92,10 +92,7 @@ suite 'Object Literals', ->
       pluck = (x) -> x.a
       eq 100, pluck pluck pluck a: a: a: 100
 
-    # REDUX ERROR
-    #test 'explicit objects nested under implicit objects', ->
-
-    # REDUX ERROR
+    # REDUX ERROR - calling imp obj
     #test 'invoking functions with implicit object literals', ->
     #  generateGetter = (prop) -> (obj) -> obj[prop]
     #  getA = generateGetter 'a'
@@ -167,7 +164,7 @@ suite 'Object Literals', ->
       eq nonce0, obj.a.b().c
       eq nonce1, obj.d
 
-    # REDUX ERROR
+    # REDUX ERROR - imp object with post ifs/fors
     #test 'jashkenas/coffee-script#1871: Special case for IMPLICIT_END in the middle of an implicit object', ->
     #  result = 'result'
     #  ident = (x) -> x

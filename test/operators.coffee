@@ -200,7 +200,7 @@ suite 'Operators', ->
     test "jashkenas/coffee-script#1630: `in` should check `hasOwnProperty`", ->
       ok undefined not in {length: 1}
 
-    # REDUX ERROR
+    # REDUX ERROR - for without in
     #test "jashkenas/coffee-script#1714: lexer bug with raw range `for` followed by `in`", ->
     #  0 for [1..2]
     #  ok not ('a' in ['b'])

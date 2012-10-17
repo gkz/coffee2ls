@@ -111,7 +111,7 @@ suite 'Classes', ->
       ok Static.static.one is 1
       ok Static.static.two is 2
 
-    # REDUX ERROR
+    # REDUX ERROR - static imp objs in classes
     #test 'classes with static-level implicit objects', ->
     #
     #  class A
@@ -149,7 +149,7 @@ suite 'Classes', ->
       eq (new One).value, 1
       eq (new Two).value, 2
 
-    # REDUX ERROR
+    # REDUX ERROR - executable class bodies
     #test 'exectuable class bodies', ->
     #
     #  class A
@@ -336,7 +336,7 @@ suite 'Classes', ->
       class A then constructor: ctor
       ok (new A) not instanceof A
 
-    # REDUX ERROR
+    # REDUX ERROR - directives
     #test 'jashkenas/coffee-script#1534: class then 'use strict'', ->
     #  # [14.1 Directive Prologues and the Use Strict Directive](http://es5.github.com/#x14.1)
     #  nonce = {}

@@ -54,35 +54,34 @@ suite 'Assignment', ->
       eq 5, b
       eq 3, c
 
-    # REDUX ERROR
     # *note: this test could still use refactoring*
-    #test "compound assignment should be careful about caching variables", ->
-    #  count = 0
-    #  list = []
+    test "compound assignment should be careful about caching variables", ->
+      count = 0
+      list = []
 
-    #  list[++count] or= 1
-    #  eq 1, list[1]
-    #  eq 1, count
+      list[++count] or= 1
+      eq 1, list[1]
+      eq 1, count
 
-    #  list[++count] ?= 2
-    #  eq 2, list[2]
-    #  eq 2, count
+      list[++count] ?= 2
+      eq 2, list[2]
+      eq 2, count
 
-    #  list[count++] and= 6
-    #  eq 6, list[2]
-    #  eq 3, count
+      list[count++] and= 6
+      eq 6, list[2]
+      eq 3, count
 
-    #  base = ->
-    #    ++count
-    #    base
+      base = ->
+        ++count
+        base
 
-    #  base().four or= 4
-    #  eq 4, base.four
-    #  eq 4, count
+      base().four or= 4
+      eq 4, base.four
+      eq 4, count
 
-    #  base().five ?= 5
-    #  eq 5, base.five
-    #  eq 5, count
+      base().five ?= 5
+      eq 5, base.five
+      eq 5, count
 
     test "compound assignment with implicit objects", ->
       obj = undefined
