@@ -84,5 +84,9 @@ require.extensions['.coffee'] = (module, filename) ->
   input = fs.readFileSync filename, 'utf8'
   csAst = CoffeeScript.parse input, {optimise: no}
   ls = CoffeeScript.ls csAst
-  js = CoffeeScript.ls2js ls
+  try
+    js = CoffeeScript.ls2js ls
+  catch e
+    console.error 'Error: failed to compile LiveScript', filename
+    throw e
   module._compile js, filename
