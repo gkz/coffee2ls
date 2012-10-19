@@ -1,7 +1,7 @@
 suite 'William Shakespeare', ->
 
   test 'Hamlet', ->
-    CoffeeScript.parse '''
+    coffee2ls.parse '''
       To be or not to be, that is the question
       Whether tis Nobler in the mind to suffer
       The Slings and Arrows of outrageous Fortune,

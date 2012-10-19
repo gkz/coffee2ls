@@ -342,11 +342,11 @@ suite 'Classes', ->
     #  nonce = {}
     #  error = 'do -> ok this'
     #  strictTest = "do ->'use strict';#{error}"
-    #  return unless (try CoffeeScript.run strictTest, bare: yes catch e then nonce) is nonce
+    #  return unless (try run strictTest, bare: yes catch e then nonce) is nonce
     #
-    #  throws -> CoffeeScript.run "class then 'use strict';#{error}", bare: yes
-    #  doesNotThrow -> CoffeeScript.run "class then #{error}", bare: yes
-    #  doesNotThrow -> CoffeeScript.run "class then #{error};'use strict'", bare: yes
+    #  throws -> run "class then 'use strict';#{error}", bare: yes
+    #  doesNotThrow -> run "class then #{error}", bare: yes
+    #  doesNotThrow -> run "class then #{error};'use strict'", bare: yes
     #
     #  # comments are ignored in the Directive Prologue
     #  comments = ["""
@@ -368,7 +368,7 @@ suite 'Classes', ->
     #    #{error}
     #    ### comment 3 ###"""
     #  ]
-    #  throws (-> CoffeeScript.run comment, bare: yes) for comment in comments
+    #  throws (-> run comment, bare: yes) for comment in comments
     #
     #  # [ES5 §14.1](http://es5.github.com/#x14.1) allows for other directives
     #  directives = ["""
@@ -395,7 +395,7 @@ suite 'Classes', ->
     #    'use strict'
     #    #{error}"""
     #  ]
-    #  throws (-> CoffeeScript.run directive, bare: yes) for directive in directives
+    #  throws (-> run directive, bare: yes) for directive in directives
 
     test 'jashkenas/coffee-script#2052: classes should work in strict mode', ->
       do ->

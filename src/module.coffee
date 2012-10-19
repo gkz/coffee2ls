@@ -5,88 +5,70 @@ path = require 'path'
 Nodes = require './nodes'
 {Preprocessor} = require './preprocessor'
 Parser = require './parser'
-{Optimiser} = require './optimiser'
-{Compiler} = require './compiler'
-lscodegen = try require 'lscodegen'
-escodegen = try require 'escodegen'
-uglifyjs = try require 'uglify-js'
+codegen = require 'coffee2ls-codegen'
+js2coffee = require 'js2coffee'
 LiveScript = require 'LiveScript'
 
-
-CoffeeScript = null
+coffee2ls = null
 pkg = require path.join __dirname, '..', '..', 'package.json'
-
-escodegenFormatDefaults =
-  indent:
-    style: '  '
-    base: 0
-  renumber: yes
-  hexadecimal: yes
-  quotes: 'auto'
-  parentheses: no
 
 
 module.exports =
-
-  Compiler: Compiler
-  Optimiser: Optimiser
   Parser: Parser
   Preprocessor: Preprocessor
   Nodes: Nodes
 
   VERSION: pkg.version
 
-  parse: (coffee, options = {}) ->
-    options.optimise ?= yes
+  parse: (coffee) ->
     try
       preprocessed = Preprocessor.processSync coffee
       parsed = Parser.parse preprocessed
-      if options.optimise then Optimiser.optimise parsed else parsed
     catch e
       throw e unless e instanceof Parser.SyntaxError
       throw new Error formatParserError preprocessed, e
 
-  compile: (js, options) ->
-    @ls2js @ls @parse js, options
-    #Compiler.compile csAst, options
+  js2coffee: (js, options = {js: {}}) ->
+    try js2coffee.build js, options.js
+    catch e
+      unless options.suppress
+        console.log 'Error with JavaScript -> CoffeeScript compilation'
+        console.log js
+      throw e
 
-  run: (js, options) ->
-    eval @compile js, options
+  ls: (csAst, options = {}) ->
+    try codegen.generate csAst
+    catch e
+      unless options.suppress
+        console.log 'Error with CoffeeScript AST -> LiveScript compilation'
+        console.log csAst
+      throw e
 
-  # TODO
-  cs: (csAst, options) ->
-    # TODO: opt: format (default: nice defaults)
+  compile: (csAst, options = {}) ->
+    @ls csAst, options
 
-  ls: (csAst, options) ->
-    lscodegen.generate csAst
+  ls2js: (ls, options = {ls: {bare: true}}) ->
+    try LiveScript.compile ls, options.ls
+    catch e
+      unless options.suppress
+        console.log 'Error with LiveScript -> JavaScript compilation'
+        console.log ls
+      throw e
 
-  ls2js: (code) ->
-    LiveScript.compile code
+  coffee2js: (coffee, options = {}) ->
+    @ls2js (@ls (@parse coffee), options), options
 
-  js: (jsAst, options = {}) ->
-    # TODO: opt: minify (default: no)
-    throw new Error 'escodegen not found: run `npm install escodegen`' unless escodegen?
-    escodegen.generate jsAst,
-      comment: yes
-      format: options.format ? escodegenFormatDefaults
+  run: (coffee, suppress) ->
+    try eval @coffee2js coffee
+    catch e
+      unless options.suppress
+        console.log 'Error attempting to eval JavaScript compiled from CoffeeScript'
+        console.log coffee
+      throw e
 
-  sourceMap: (jsAst, name = 'unknown', options = {}) ->
-    throw new Error 'escodegen not found: run `npm install escodegen`' unless escodegen?
-    escodegen.generate jsAst.toJSON(),
-      comment: yes
-      sourceMap: name
-      format: options.format ? escodegenFormatDefaults
 
-CoffeeScript = module.exports.CoffeeScript = module.exports
-
+coffee2ls = module.exports.coffee2ls = module.exports
 
 require.extensions['.coffee'] = (module, filename) ->
   input = fs.readFileSync filename, 'utf8'
-  csAst = CoffeeScript.parse input, {optimise: no}
-  ls = CoffeeScript.ls csAst
-  try
-    js = CoffeeScript.ls2js ls
-  catch e
-    console.error 'Error: failed to compile LiveScript', filename
-    throw e
-  module._compile js, filename
+  module._compile (coffee2ls.coffee2js input), filename

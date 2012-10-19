@@ -62,8 +62,8 @@ suite 'Object Literals', ->
       ok 'for' of obj
 
     test 'jashkenas/coffee-script#1513: Top level bare objects need to be wrapped in parens for unary and existence ops', ->
-      doesNotThrow -> CoffeeScript.run '{}?', bare: true
-      doesNotThrow -> CoffeeScript.run '{}.a++', bare: true
+      doesNotThrow -> run '{}?', bare: true
+      doesNotThrow -> run '{}.a++', bare: true
 
   suite 'Implicit Objects', ->
 
@@ -151,7 +151,7 @@ suite 'Object Literals', ->
     #  ok result.length is 4
     #  ok result[2].b is 1
     #
-    #  throws -> CoffeeScript.compile 'a = b:1, c'
+    #  throws -> coffee2js 'a = b:1, c'
 
     test 'multiple dedentations in implicit object literals', ->
       nonce0 = {}
