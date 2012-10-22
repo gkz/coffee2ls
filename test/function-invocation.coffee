@@ -42,13 +42,12 @@ suite 'Function Invocation', ->
         add 5, 5
     ok result is 10
 
-  # REDUX ERROR - trailing comma
-  #test "hanging commas and semicolons in argument list", ->
-  #  fn = -> arguments.length
-  #  eq 2, fn(0,1,)
-  #  eq 3, fn 0, 1,
-  #  #2
-  #  eq 2, fn(0, 1; 2)
+  test "hanging commas and semicolons in argument list", ->
+    fn = -> arguments.length
+    eq 2, fn(0,1,)
+    eq 3, fn 0, 1,
+    2
+    eq 2, fn(0, 1; 2)
 
   test "function invocation", ->
     func = ->
@@ -93,14 +92,13 @@ suite 'Function Invocation', ->
     eq 20, obj.anonymousAdd 10, 10
     eq 40, obj.fastAdd (20), 20
 
-  # REDUX ERROR - trailing comma
-  #test "Ensure that functions can have a trailing comma in their argument list", ->
-  #  mult = (x, mids..., y) ->
-  #    x *= n for n in mids
-  #    x *= y
-  #  ok mult(1, 2,) is 2
-  #  ok mult(1, 2, 3,) is 6
-  #  ok mult(10, (i for i in [1..6])...) is 7200
+  test "Ensure that functions can have a trailing comma in their argument list", ->
+    mult = (x, mids..., y) ->
+      x *= n for n in mids
+      x *= y
+    ok mult(1, 2,) is 2
+    ok mult(1, 2, 3,) is 6
+    ok mult(10, (i for i in [1..6])...) is 7200
 
   test "`@` and `this` should both be able to invoke a function", ->
     nonce = {}
