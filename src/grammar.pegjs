@@ -704,7 +704,7 @@ switch
 
 
 functionLiteral
-  = params:("(" _ parameterList? _ ")" _)? arrow:("->" / "=>") body:functionBody? {
+  = params:("(" _ ( TERMINDENT p:parameterList DEDENT TERMINATOR { return p; } / parameterList)? _ ")" _)? arrow:("->" / "=>") body:functionBody? {
       if(!body) body = {block: null, raw: ''};
       var raw =
         (params ? params[0] + params[1] + (params[2] && params[2].raw) + params[3] + params[4] + params[5] : '') +
@@ -734,7 +734,7 @@ functionLiteral
           return (rest ? new CS.Rest(a) : a).r(a.raw + rest).p(line, column, offset);
         }
   parameterList
-    = e:parameter es:(_ "," _ parameter)* {
+    = e:parameter es:(_ ( "," TERMINATOR? / TERMINATOR ) _ parameter)* {
         var raw = e.raw + es.map(function(e){ return e[0] + e[1] + e[2] + e[3].raw; }).join('');
         return {list: [e].concat(es.map(function(e){ return e[3]; })), raw: raw};
       }

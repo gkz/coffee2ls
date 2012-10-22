@@ -183,18 +183,23 @@ suite 'Function Literals', ->
       g = -> f
       eq nonce, g(f) -> nonce
 
-    # REDUX ERROR - whitespace in func def param lists
-    #test "#2258: allow whitespace-style parameter lists in function definitions", ->
-    #  func = (
-    #    a, b, c
-    #  ) -> c
-    #  eq func(1, 2, 3), 3
-    #  func = (
-    #    a
-    #    b
-    #    c
-    #  ) -> b
-    #  eq func(1, 2, 3), 2
+    test "#2258: allow whitespace-style parameter lists in function definitions", ->
+      func = (
+        a, b, c
+      ) -> c
+      eq func(1, 2, 3), 3
+      func = (
+        a
+        b
+        c
+      ) -> b
+      eq func(1, 2, 3), 2
+      func = (
+        a,
+        b,
+        c
+      ) -> b
+      eq func(1, 2, 3), 2
 
     test '#66: functions whose final expression is `throw` should compile', ->
       (->) -> throw {}
