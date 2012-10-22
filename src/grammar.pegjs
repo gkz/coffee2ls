@@ -807,7 +807,7 @@ implicitObjectLiteral
     return new CS.ObjectInitialiser(members.list).r(members.raw).p(line, column, offset);
   }
   implicitObjectLiteralMemberList
-    = e:implicitObjectLiteralMember es:(implicitObjectLiteralMemberSeparator _ implicitObjectLiteralMember)* {
+    = e:implicitObjectLiteralMember es:(implicitObjectLiteralMemberSeparator _ implicitObjectLiteralMember)* ("," TERMINATOR)? {
         var raw = e.raw + es.map(function(e){ return e[0] + e[1] + e[2].raw; }).join('');
         return {list: [e].concat(es.map(function(e){ return e[2]; })), raw: raw};
       }

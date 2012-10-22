@@ -67,26 +67,25 @@ suite 'Object Literals', ->
 
   suite 'Implicit Objects', ->
 
-    # REDUX ERROR - imp obj lit
-    #test 'implicit object literals', ->
-    #
-    #  obj =
-    #    a: 1,
-    #    b: 2,
-    #  ok obj.a is 1
-    #  ok obj.b is 2
-    #
-    #  config =
-    #    development:
-    #      server: 'localhost'
-    #      timeout: 10
-    #    production:
-    #      server: 'dreamboat'
-    #      timeout: 1000
-    #  ok config.development.server  is 'localhost'
-    #  ok config.production.server   is 'dreamboat'
-    #  ok config.development.timeout is 10
-    #  ok config.production.timeout  is 1000
+    test 'implicit object literals', ->
+
+      obj =
+        a: 1,
+        b: 2,
+      ok obj.a is 1
+      ok obj.b is 2
+
+      config =
+        development:
+          server: 'localhost'
+          timeout: 10
+        production:
+          server: 'dreamboat'
+          timeout: 1000
+      ok config.development.server  is 'localhost'
+      ok config.production.server   is 'dreamboat'
+      ok config.development.timeout is 10
+      ok config.production.timeout  is 1000
 
     test 'implicit objects as part of chained calls', ->
       pluck = (x) -> x.a
