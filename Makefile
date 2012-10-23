@@ -58,6 +58,9 @@ lib/coffee-script/%.js: src/%.coffee lib/coffee-script/bootstrap/%.js bootstraps
 test: $(LIB) $(TESTS)
 	$(MOCHA) -R dot
 
+xtest: $(TESTS)
+	$(MOCHA) -R dot
+
 coverage: $(LIB)
 	@which jscoverage || (echo "install node-jscoverage"; exit 1)
 	rm -rf instrumented
