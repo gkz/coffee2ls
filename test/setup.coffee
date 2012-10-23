@@ -25,11 +25,16 @@ global.arrayEq = (a, b, msg) -> ok arrayEgal(a,b), msg ? "#{inspect a} === #{ins
 libDir = if typeof _$jscoverage is 'undefined' then 'lib' else 'instrumented'
 
 coffee2ls = require '..'
-global.coffee2ls = coffee2ls
-global.coffee2js = (x) ->
+t = {}
+t.coffee2js = (x) ->
   coffee2ls.coffee2js x, {suppress: true}
-global.run = (x) ->
+t.run = (x) ->
   coffee2ls.run x, {suppress: true}
+t.parse = (x) ->
+  coffee2ls.parse x, {suppress: true}
+global.t = t
+global.coffee2ls = coffee2ls
+
 
 global.CS = require "../#{libDir}/coffee2ls/nodes"
 global.Parser = require "../#{libDir}/coffee2ls/parser"

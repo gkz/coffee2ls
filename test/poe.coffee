@@ -1,7 +1,7 @@
 suite 'Edgar Allan Poe', ->
 
   test 'The Raven', ->
-    coffee2ls.parse '''
+    t.parse '''
       Once upon a mignight dreary while I pondered, weak and weary,
       Over many quaint and curious volume of forgotten lore -
       While I nodded, nearly napping, suddenly there came a tapping,
