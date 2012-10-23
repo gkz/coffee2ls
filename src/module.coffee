@@ -20,11 +20,13 @@ module.exports =
 
   VERSION: pkg.version
 
-  parse: (coffee) ->
+  parse: (coffee, options = {}) ->
     try
       preprocessed = Preprocessor.processSync coffee
       parsed = Parser.parse preprocessed
     catch e
+      unless options.suppress
+        console.log 'Error parsing CoffeeScript'
       throw e unless e instanceof Parser.SyntaxError
       throw new Error formatParserError preprocessed, e
 
@@ -56,10 +58,10 @@ module.exports =
       throw e
 
   coffee2js: (coffee, options = {}) ->
-    @ls2js (@ls (@parse coffee), options), options
+    @ls2js (@ls (@parse coffee, options), options), options
 
-  run: (coffee, suppress) ->
-    try eval @coffee2js coffee
+  run: (coffee, options) ->
+    try eval @coffee2js coffee, options
     catch e
       unless options.suppress
         console.log 'Error attempting to eval JavaScript compiled from CoffeeScript'
