@@ -481,3 +481,19 @@ suite 'Function Invocation', ->
     f = (x) -> x[0]
     ok f(x for x in [true])
     ok f(x and y for x in [true] for y in [true])
+
+  test "soaked function application", ->
+    nonce = {}
+    eq undefined, f?(0, 1)
+    eq undefined, f? 0, 1
+    eq undefined, f?
+      a: 0
+    eq undefined, f? 0,
+      a: 1
+    f = -> nonce
+    eq nonce, f?(0, 1)
+    eq nonce, f? 0, 1
+    eq nonce, f?
+      a: 0
+    eq nonce, f? 0,
+      a: 1
