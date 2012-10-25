@@ -422,10 +422,14 @@ leftHandSideExpression = callExpression / newExpression
     = spread
     / secondaryExpression
 callExpression
-  = fn:memberExpression accesses:(argumentList / MemberAccessOps)* secondaryArgs:secondaryArgumentList? {
+  = fn:memberExpression accesses:(argumentList / MemberAccessOps)* secondaryArgs:("?"? secondaryArgumentList)? {
       if(accesses) fn = createMemberExpression(fn, accesses);
-      if(secondaryArgs)
-        fn = new CS.FunctionApplication(fn, secondaryArgs.list).r(fn.raw + secondaryArgs.raw).p(line, column, offset);
+      var soaked, secondaryCtor;
+      if(secondaryArgs) {
+        soaked = secondaryArgs[0];
+        secondaryCtor = soaked ? CS.SoakedFunctionApplication : CS.FunctionApplication;
+        fn = new secondaryCtor(fn, secondaryArgs[1].list).r(fn.raw + secondaryArgs[1].raw).p(line, column, offset);
+      }
       return fn;
     }
 newExpression
@@ -695,7 +699,7 @@ switch
 
 
 functionLiteral
-  = params:("(" _ parameterList? _ ")" _)? arrow:("->" / "=>") body:functionBody? {
+  = params:("(" _ (td:TERMINDENT p:parameterList d:DEDENT t:TERMINATOR { return {e: p, raw: td + p.raw + d + t}; } / p:parameterList { return {e: p, raw: p.raw}; })? _ ")" _)?  arrow:("->" / "=>") body:functionBody? {
       if(!body) body = {block: null, raw: ''};
       var raw =
         (params ? params[0] + params[1] + (params[2] && params[2].raw) + params[3] + params[4] + params[5] : '') +
@@ -706,7 +710,7 @@ functionLiteral
         case '=>': constructor = CS.BoundFunction; break;
         default: throw new Error('parsed function arrow ("' + arrow + '") not associated with a constructor');
       }
-      params = params && params[2] ? params[2].list : [];
+      params = params && params[2] && params[2].e ? params[2].e.list : [];
       return new constructor(params, body.block).r(raw).p(line, column, offset);
     }
   functionBody
@@ -725,7 +729,7 @@ functionLiteral
           return (rest ? new CS.Rest(a) : a).r(a.raw + rest).p(line, column, offset);
         }
   parameterList
-    = e:parameter es:(_ "," _ parameter)* {
+    = e:parameter es:(_ (c:"," t:TERMINATOR? { return c + t; } / TERMINATOR) _ parameter)* {
         var raw = e.raw + es.map(function(e){ return e[0] + e[1] + e[2] + e[3].raw; }).join('');
         return {list: [e].concat(es.map(function(e){ return e[3]; })), raw: raw};
       }
@@ -785,7 +789,7 @@ objectLiteral
         var key = new CS.String(v.memberName).r(v.memberName).p(line, column + 1)
         return new CS.ObjectInitialiserMember(key, v).r(v.raw).p(line, column, offset);
       }
-	/ v:ObjectInitialiserKeys {
+    / v:ObjectInitialiserKeys {
         return new CS.ObjectInitialiserMember(v, v).r(v.raw).p(line, column, offset);
       }
   ObjectInitialiserKeys
@@ -993,7 +997,7 @@ namedDestructuring
         var key = new CS.String(v.memberName).r(v.memberName).p(line, column + 1)
         return new CS.ObjectInitialiserMember(key, v).r(v.raw).p(line, column, offset);
       }
-	/ !unassignable i:identifier {
+    / !unassignable i:identifier {
         return new CS.ObjectInitialiserMember(i, i).r(i.raw).p(line, column, offset);
       }
 
