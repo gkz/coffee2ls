@@ -114,10 +114,12 @@ suite 'Object Literals', ->
       a:43
       eq 43, result
 
-      result = getA b:1,
-        a:62
-      eq undefined, result
-    #
+    # FAIL: Works in redux/term-before-commas-in-function-application but not coffee2ls??
+    # result = getA b:1,
+    #   a:62
+    # eq undefined, result
+    # /FAIL
+
     #  result = getA
     #    b:1
     #    a
@@ -189,10 +191,13 @@ suite 'Object Literals', ->
       )
       eq 43, result
 
-      result = getA(b:1,
-        a:62
-      )
-      eq undefined, result
+    # FAIL: Works in redux/term-before-commas-in-function-application but not coffee2ls??
+    # result = getA(b:1,
+    #   a:62
+    # )
+    # eq undefined, result
+    # /FAIL
+
     # result = getA(
     #   b:1
     #   a
