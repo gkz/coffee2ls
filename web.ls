@@ -42,8 +42,8 @@ output = (params={}, result="") ->
 
 @post '/' ->
     { js, cs } = @body
-    src = if js? then js2coffee.build js else cs
     try
+        src = if js? then js2coffee.build js else cs
         tgt = coffee2ls.compile coffee2ls.parse src
     catch e
         tgt = "ERROR: #e"
