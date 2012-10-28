@@ -1,10 +1,19 @@
 #!/usr/bin/env livescript
 CoffeeScript = require \coffee-script
-js2coffee = require \/usr/local/lib/node_modules/js2coffee/lib/js2coffee.coffee
+js2coffee = require \./node_modules/js2coffee/lib/js2coffee.coffee
 coffee2ls = require \./lib/coffee2ls/module.js
 
 escapeHTML = -> (it ? "").replace(/</g, '&lt;').replace(/>/g, '&gt;')
-output = (params={}, result="") ->
+output = (params={js: """
+/* Type here! */
+
+(function ($) {
+    $.fn.highlight = function () {
+        $(this).css({ color: 'red', background: 'yellow' });
+        $(this).fadeIn();
+    };
+})(jQuery);
+"""}, result="") ->
     body = """
         <html><head><style>
             textarea {
