@@ -15,8 +15,8 @@ output = (src="""
 })(jQuery);
 """, tgt="", cs=no) ->
     body = """<html><head>
-            <link href="https://dl.dropbox.com/u/5646210/audrey/css/reset.css" rel="stylesheet" type="text/css">
-            <link href="https://dl.dropbox.com/u/5646210/audrey/css/style.css" rel="stylesheet" type="text/css">
+        <link href="http://js2ls.org/css/reset.css" rel="stylesheet" type="text/css">
+        <link href="http://js2ls.org/css/style.css" rel="stylesheet" type="text/css">
 <style>
 li input {
     display:inline-block;
