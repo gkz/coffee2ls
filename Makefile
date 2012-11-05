@@ -15,7 +15,7 @@ MINIFIER = node_modules/.bin/uglifyjs --no-copyright --mangle-toplevel --reserve
 all: $(LIB)
 build: all
 parser: lib/coffee2ls/parser.js
-browserify: CoffeeScriptRedux.js
+browserify: Coffee2LS.min.js
 minify: $(LIBMIN)
 # TODO: test-browser
 # TODO: doc
@@ -38,11 +38,13 @@ lib/coffee2ls/%.js: src/%.coffee lib/coffee2ls
 	$(COFFEE) < "$<" > "$@"
 
 
-CoffeeScriptRedux.js: $(LIB)
-	$(BROWSERIFY) lib/coffee-script/module.js | $(MINIFIER) > CoffeeScriptRedux.js
+Coffee2LS.min.js: Coffee2LS.js
+	$(MINIFIER) < "$<" > "$@"
 
+Coffee2LS.js: $(LIB)
+	$(BROWSERIFY) lib/coffee2ls/module.js > "$@"
 
-lib/coffee-script/%.min.js: lib/coffee-script/%.js lib/coffee-script
+lib/coffee2ls/%.min.js: lib/coffee2ls/%.js lib/coffee2ls
 	$(MINIFIER) <"$<" >"$@"
 
 
