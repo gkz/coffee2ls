@@ -6,11 +6,10 @@ Nodes = require './nodes'
 {Preprocessor} = require './preprocessor'
 Parser = require './parser'
 codegen = require 'coffee2ls-codegen'
-js2coffee = require 'js2coffee'
 LiveScript = require 'LiveScript'
 
 coffee2ls = null
-pkg = require path.join __dirname, '..', '..', 'package.json'
+pkg = require './../../package.json'
 
 
 module.exports =
@@ -31,7 +30,8 @@ module.exports =
       throw new Error formatParserError preprocessed, e
 
   js2coffee: (js, options = {js: {}}) ->
-    try js2coffee.build js, options.js
+    try
+      eval('require("js2coffee")').build js, options.js
     catch e
       unless options.suppress
         console.log 'Error with JavaScript -> CoffeeScript compilation'
@@ -71,6 +71,10 @@ module.exports =
 
 coffee2ls = module.exports.coffee2ls = module.exports
 
-require.extensions['.coffee'] = (module, filename) ->
-  input = fs.readFileSync filename, 'utf8'
-  module._compile (coffee2ls.coffee2js input), filename
+if require?.extensions?
+  require.extensions['.coffee'] = (module, filename) ->
+    input = fs.readFileSync filename, 'utf8'
+    module._compile (coffee2ls.coffee2js input), filename
+
+if window?
+  window.coffee2ls = coffee2ls

@@ -148,8 +148,13 @@ if options.help
   """
 
 else if options.version
-  pkg = require path.join __dirname, '..', '..', 'package.json'
+  pkg = require './../../package.json'
   console.log "coffee2ls version #{pkg.version}"
+
+else if options.repl
+  # TODO: start repl
+  console.error 'TODO: REPL'
+  process.exit 1
 
 else
   # normal workflow
