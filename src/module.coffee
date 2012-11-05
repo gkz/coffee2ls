@@ -6,11 +6,11 @@ Nodes = require './nodes'
 {Preprocessor} = require './preprocessor'
 Parser = require './parser'
 codegen = require 'coffee2ls-codegen'
-js2coffee = require 'js2coffee'
+js2coffee = try require 'js2coffee'
 LiveScript = require 'LiveScript'
 
 coffee2ls = null
-pkg = require path.join __dirname, '..', '..', 'package.json'
+pkg = require './../../package.json'
 
 
 module.exports =

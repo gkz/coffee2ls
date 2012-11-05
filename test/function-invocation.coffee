@@ -484,10 +484,10 @@ suite 'Function Invocation', ->
       eq two, 2
       eq three, 3
 
-    #ret = do func = (two) ->
-    #  eq two, 2
-    #  func
-    #eq ret, func
+    ret = do func = (two) ->
+      eq two, 2
+      func
+    eq ret, func
 
   test 'call a for loop', ->
     f = (x) -> x[0]

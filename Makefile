@@ -9,11 +9,18 @@ ROOT = $(shell pwd)
 COFFEE = node_modules/CoffeeScriptRedux/bin/coffee --js --bare
 PEGJS = node_modules/.bin/pegjs --track-line-and-column --cache
 MOCHA = node_modules/.bin/mocha --compilers coffee:. -u tdd
-MINIFIER = node_modules/.bin/uglifyjs --no-copyright --mangle-toplevel --reserved-names require,module,exports,global,window
+BROWSERIFY = node_modules/.bin/browserify
+MINIFIER = node_modules/.bin/uglifyjs --no-copyright --mangle-toplevel --reserved-names require,module,exports,global,window,CoffeeScript
 
 all: $(LIB)
 build: all
 parser: lib/coffee2ls/parser.js
+browserify: CoffeeScriptRedux.js
+minify: $(LIBMIN)
+# TODO: test-browser
+# TODO: doc
+# TODO: bench
+
 
 lib:
 	mkdir lib/
@@ -29,6 +36,14 @@ lib/coffee2ls/%.min.js: lib/coffee2ls/%.js lib/coffee2ls
 
 lib/coffee2ls/%.js: src/%.coffee lib/coffee2ls
 	$(COFFEE) < "$<" > "$@"
+
+
+CoffeeScriptRedux.js: $(LIB)
+	$(BROWSERIFY) lib/coffee-script/module.js | $(MINIFIER) > CoffeeScriptRedux.js
+
+
+lib/coffee-script/%.min.js: lib/coffee-script/%.js lib/coffee-script
+	$(MINIFIER) <"$<" >"$@"
 
 
 .PHONY: test coverage install loc clean
