@@ -15,7 +15,7 @@ MINIFIER = node_modules/.bin/uglifyjs --no-copyright --mangle-toplevel --reserve
 all: $(LIB)
 build: all
 parser: lib/coffee2ls/parser.js
-browserify: Coffee2LS.min.js
+browser: extras/coffee2ls.min.js
 minify: $(LIBMIN)
 # TODO: test-browser
 # TODO: doc
@@ -37,15 +37,17 @@ lib/coffee2ls/%.min.js: lib/coffee2ls/%.js lib/coffee2ls
 lib/coffee2ls/%.js: src/%.coffee lib/coffee2ls
 	$(COFFEE) < "$<" > "$@"
 
-
-Coffee2LS.min.js: Coffee2LS.js
-	$(MINIFIER) < "$<" > "$@"
-
-Coffee2LS.js: $(LIB)
-	$(BROWSERIFY) lib/coffee2ls/module.js > "$@"
-
 lib/coffee2ls/%.min.js: lib/coffee2ls/%.js lib/coffee2ls
 	$(MINIFIER) <"$<" >"$@"
+
+extras:
+	mkdir extras/
+
+extras/coffee2ls.js: extras $(LIB)
+	$(BROWSERIFY) lib/coffee2ls/module.js > "$@"
+
+extras/coffee2ls.min.js: extras/coffee2ls.js
+	$(MINIFIER) < "$<" > "$@"
 
 
 .PHONY: test coverage install loc clean
