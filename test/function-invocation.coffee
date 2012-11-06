@@ -468,7 +468,6 @@ suite 'Function Invocation', ->
     eq dotAccess().id, nonce
     eq protoAccess()::id, nonce
 
-  # REDUX ERROR - PARTIAL - do assign
   test "jashkenas/coffee-script#960: improved 'do'", ->
 
     do (nonExistent = 'one') ->
