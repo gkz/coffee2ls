@@ -392,7 +392,7 @@ class exports.Compiler
           # add a function wrapper
           block = [stmt new JS.UnaryExpression 'void', new JS.CallExpression (memberAccess (new JS.FunctionExpression null, [], new JS.BlockStatement block), 'call'), [new JS.ThisExpression]]
       # generate node
-      pkg = require (require 'path').join __dirname, '..', '..', 'package.json'
+      pkg = require './../../package.json'
       program = new JS.Program block
       program.leadingComments = [
         type: 'Line'
@@ -823,17 +823,22 @@ class exports.Compiler
         new JS.BinaryExpression '&&', typeofTest, nullTest
       else nullTest
     ]
-    [CS.DoOp, ({expression, compile}) ->
-      args = []
-      if @expression.instanceof CS.Function
-        args = for param, index in @expression.parameters
+    [CS.DoOp, do ->
+      deriveArgsFromParams = (params) ->
+        args = for param, index in params
           switch
             when param.instanceof CS.DefaultParam
-              @expression.parameters[index] = param.param
+              params[index] = param.param
               param.default
             when param.instanceof CS.Identifier, CS.MemberAccessOp then param
             else helpers.undef()
-      compile new CS.FunctionApplication @expression, args
+      ({expression, compile}) ->
+        args = []
+        if (@expression.instanceof CS.AssignOp) and @expression.expression.instanceof CS.Function
+          args = deriveArgsFromParams @expression.expression.parameters
+        else if @expression.instanceof CS.Function
+          args = deriveArgsFromParams @expression.parameters
+        compile new CS.FunctionApplication @expression, args
     ]
     [CS.Return, ({expression: e}) -> new JS.ReturnStatement expr e]
     [CS.Break, -> new JS.BreakStatement]
