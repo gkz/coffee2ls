@@ -888,18 +888,21 @@ bit = [01]
 
 // TODO: raw
 string
-  = "\"\"\"" d:(stringData / "'" / s:("\"" "\""? !"\"") { return s.join(''); })+ "\"\"\"" {
+  = '"""' d:(stringData / "'" / s:('"' '"'? !'"') { return s.join(''); })* '"""' {
       var data = stripLeadingWhitespace(d.join(''));
       return new CS.String(data).p(line, column, offset);
     }
-  / "'''" d:(stringData / "\"" / "#" / s:("'" "'"? !"'") { return s.join(''); })+ "'''" {
+  / "'''" d:(stringData / '"' / "#" / s:("'" "'"? !"'") { return s.join(''); })* "'''" {
       var data = stripLeadingWhitespace(d.join(''));
       return new CS.String(data).p(line, column, offset);
     }
-  / "\"" d:(stringData / "'")* "\"" { return new CS.String(d ? d.join('') : '').p(line, column, offset); }
-  / "'" d:(stringData / "\"" / "#")* "'" { return new CS.String(d ? d.join('') : '').p(line, column, offset); }
+  / '"' d:(stringData / "'")* '"' { return new CS.String(d ? d.join('') : '').p(line, column, offset); }
+  / "'" d:(stringData / '"' / "#")* "'" { return new CS.String(d ? d.join('') : '').p(line, column, offset); }
   stringData
-    = [^"'\\#]
+    = stringLineData
+    / '\n'
+  stringLineData
+    = [^"'\\#\n]
     / UnicodeEscapeSequence
     / "\\x" h0:hexDigit h1:hexDigit { return String.fromCharCode(parseInt(h0 + h1, 16)); }
     / "\\0" !decimalDigit { return '\0'; }
@@ -915,19 +918,69 @@ string
 
 // TODO: raw
 interpolation
-  = "\"\"\"" es:
-    ( d:(stringData / "'" / s:("\"" "\""? !"\"") { return s.join(''); })+ { return new CS.String(d.join('')).p(line, column, offset); }
-    / "#{" _ e:expression _ "}" { return e; }
-    )+ "\"\"\"" {
+  = '"""' lines:( init:(i:interpolationPart* "\n" { return i; })* last:interpolationPart* "\n"? { return init.concat([last]); }) '"""' {
+      var i, len, lastLine, dent, ldent;
+      // remove starting newlines
+      while (!lines[0].length) {
+        lines.shift();
+        if (!lines[0]) {
+          return new CS.String('').p(line, column, offset);
+        }
+      }
+      // remove ending newlines
+      i = lines.length - 1;
+      while (i >= 0 && !lines[i--].length) {
+        lines.pop();
+      }
+      // remove ending whitespace
+      len = lines.length;
+      lastLine = lines[len - 1];
+      if (lastLine[lastLine.length - 1].className === "String") {
+        lines[len - 1][lastLine.length - 1].data  = lines[len - 1][lastLine.length - 1].data.replace(/\s+$/, '');
+      }
+      // find common indent
+      i = 0;
+      dent = 9e9;
+      len = lines.length - 1; // skip the last one as it's empty
+      while (i < len) {
+        if (lines[i][0].className === "String") {
+          ldent = /([^\S]*)/.exec(lines[i][0].data)[1].length;
+          if (ldent < dent) {
+            dent = ldent
+          }
+        } else {
+          dent = 0;
+        }
+        if (!dent) {
+          break;
+        }
+        ++i;
+      }
+      // slice away common indent, re-add newline
+      if (dent > 0) {
+        i = 0;
+        while (i < len) {
+          lines[i][0].data = lines[i][0].data.slice(dent);
+          // don't add a newline to the end
+          if (i < len - 1) {
+            lines[i].push(new CS.String('\n'));
+          }
+          ++i;
+        }
+      }
+      // concat lines and create interpolation
+      var es = [].concat.apply([], lines);
       return createInterpolation(es).p(line, column, offset);
     }
-  / "\"" es:
+  / '"' es:
     ( d:(stringData / "'")+ { return new CS.String(d.join('')).p(line, column, offset); }
     / "#{" _ e:expression _ "}" { return e; }
-    )+ "\"" {
+    )+ '"' {
       return createInterpolation(es).p(line, column, offset);
     }
-
+  interpolationPart
+    = d:(stringLineData / "'" / s:('"' '"'? !'"') { return s.join(''); })+ { return new CS.String(d.join('')).p(line, column, offset); }
+    / "#{" _ e:expression _ "}" { return e; }
 
 // TODO: raw
 regexp

@@ -62,12 +62,21 @@ suite 'String Interpolation', ->
     #{b}
     c
     "
-    eq """
-      a
-      b
-      c
-    """, """
+  test 'string block interpolation', ->
+    b = 'b'
+    eq """a\nb\nc""",
+    """
       a
       #{b}
+      c
+    """
+    eq 'b', """#{b}"""
+    eq '  b', """  #{b}"""
+    eq 'b', """
+#{b}
+"""
+    eq '  a\nb\n    c', """
+    a
+  #{b}
       c
     """
