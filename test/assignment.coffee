@@ -272,7 +272,7 @@ suite 'Assignment', ->
       c ?= nonce
       eq nonce, c
 
-    # FAIL - PARTIAL
+    # FAIL - PARTIAL - not throwing
     test "#1627: prohibit conditional assignment of undefined variables", ->
       throws (-> t.coffee2js "x ?= 10"),        null, "prohibit (x ?= 10)"
       throws (-> t.coffee2js "x ||= 10"),       null, "prohibit (x ||= 10)"
@@ -344,7 +344,7 @@ suite 'Assignment', ->
 
       eq name, 'dave'
 
-    # FAIL - PARTIAL
+    # FAIL - PARTIAL - not throwing
     test 'jashkenas/coffee-script#2211: splats in destructured parameters', ->
       doesNotThrow -> t.coffee2js '([a...]) ->'
       doesNotThrow -> t.coffee2js '([a...],b) ->'

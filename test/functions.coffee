@@ -94,7 +94,7 @@ suite 'Function Literals', ->
       arrayEq splatArray(arr), arr
       arrayEq splatArrayRest(arr,0,1,2), arr
 
-    # FAIL - PARTIAL
+    # FAIL - PARTIAL - following CS1
     test "@-parameters: automatically assign an argument's value to a property of the context", ->
       nonce = {}
 

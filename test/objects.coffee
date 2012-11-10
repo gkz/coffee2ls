@@ -114,30 +114,29 @@ suite 'Object Literals', ->
       a:43
       eq 43, result
 
-    # FAIL: Works in redux/term-before-commas-in-function-application but not coffee2ls??
-    # result = getA b:1,
-    #   a:62
-    # eq undefined, result
-    # /FAIL
+     # FAIL - PARTIAL - Works in redux/term-before-commas-in-function-application but not coffee2ls?
+     # result = getA b:1,
+     #   a:62
+     # eq undefined, result
 
-    #  result = getA
-    #    b:1
-    #    a
-    #  eq undefined, result
-    #
-    #  result = getA
-    #    a:
-    #      b:2
-    #    b:1
-    #  eq 2, result.b
-    #
-    #  result = getArgs
-    #    a:1
-    #    b
-    #    c:1
-    #  ok result.length is 3
-    #  ok result[2].c is 1
-    #
+     # result = getA
+     #   b:1
+     #   a
+     # eq undefined, result
+     #
+     # result = getA
+     #   a:
+     #     b:2
+     #   b:1
+     # eq 2, result.b
+     #
+     # result = getArgs
+     #   a:1
+     #   b
+     #   c:1
+     # ok result.length is 3
+     # ok result[2].c is 1
+
       result = getA b: 13, a: 42, 2
       eq 42, result
 
@@ -191,18 +190,17 @@ suite 'Object Literals', ->
       )
       eq 43, result
 
-    # FAIL: Works in redux/term-before-commas-in-function-application but not coffee2ls??
-    # result = getA(b:1,
-    #   a:62
-    # )
-    # eq undefined, result
-    # /FAIL
+     # FAIL - PARTIAL - Works in redux/term-before-commas-in-function-application but not coffee2ls?
+     # result = getA(b:1,
+     #   a:62
+     # )
+     # eq undefined, result
 
-    # result = getA(
-    #   b:1
-    #   a
-    # )
-    # eq undefined, result
+     # result = getA(
+     #   b:1
+     #   a
+     # )
+     # eq undefined, result
 
       result = getA(
         a:
@@ -211,13 +209,13 @@ suite 'Object Literals', ->
       )
       eq 2, result.b
 
-    # result = getArgs(
-    #   a:1
-    #   b
-    #   c:1
-    # )
-    # ok result.length is 3
-    # ok result[2].c is 1
+     # result = getArgs(
+     #   a:1
+     #   b
+     #   c:1
+     # )
+     # ok result.length is 3
+     # ok result[2].c is 1
 
       result = getA(b: 13, a: 42, 2)
       eq 42, result
@@ -235,6 +233,7 @@ suite 'Object Literals', ->
 
       throws -> CoffeeScript.compile 'a = b:1, c'
 
+    # REDUX ERROR - implicit end in middle of implicit object
     #test 'jashkenas/coffee-script#1871: Special case for IMPLICIT_END in the middle of an implicit object', ->
     #  result = 'result'
     #  ident = (x) -> x
