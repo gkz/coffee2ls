@@ -1047,6 +1047,7 @@ Assignable
   / contextVar
   / positionalDestructuring
   / namedDestructuring
+  / "(" a:Assignable ")" { return a; }
 
 positionalDestructuring
   = "[" members:positionalDestructuringBody  t:TERMINATOR? ws:_ "]" {
