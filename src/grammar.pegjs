@@ -95,6 +95,12 @@ var CS = require("./nodes"),
       if(indent) str = str.replace(new RegExp('\\n' + indent, 'g'), '\n');
       str = str.replace(/^\n/, '');
       return str;
+    },
+    comments = [],
+    gc = function(node) {
+      node.comments = comments;
+      comments = [];
+      return node;
     };
 }
 
@@ -1115,8 +1121,14 @@ __ = ws:whitespace+ c:(blockComment whitespace+)? { return ws.join('') + (c && c
 _ = __?
 
 comment =  blockComment / singleLineComment
-singleLineComment = "#" cs:(!TERM c:. { return c})* { return '#' + (cs && cs.join('')); }
-blockComment = "###" c:[^#] cs:([^#] / (a:"#" b:"#"? !"#") {return a + b;})* "###" { return '###' + c + cs.join('') + '###'; }
+singleLineComment = "#" h:"#"? !"#" cs:(!TERM c:. { return c})* {
+    var content = h + (cs && cs.join(''));
+    return {raw: '#' + content, content: content, type: 'single'};
+  }
+blockComment = "###" c:[^#] cs:([^#] / (a:"#" b:"#"? !"#") { return a + b;})* "###" {
+    content = c + cs.join('');
+    return {raw: '###' + content + '###', content: content, type: 'block'}
+  }
 
 whitespace
   = [\u0009\u000B\u000C\u0020\u00A0\uFEFF\u1680\u180E\u2000-\u200A\u202F\u205F\u3000]
@@ -1128,8 +1140,15 @@ TERM
   = "\r"? "\n" { return '\n'; }
   / "\uEFFF" { return ''; }
 
-TERMINATOR = ws:(_ comment? TERM blockComment?)+ {
-    return ws.map(function(s){ return s.join(''); }).join('');
+TERMINATOR = ws:(w:_ c:comment? t:TERM bc:blockComment? {
+    var co = [];
+    c.length && co.push(c);
+    bc.length && co.push(bc);
+    return {raw: w + (c.raw || '') + t + (bc.raw || ''), co: co};
+  })+ {
+    co = [].concat.apply([], ws.map(function(s){ return s.co; }));
+    comments = comments.concat(co);
+    return ws.map(function(s){ return s.raw; }).join('');
   }
 
 TERMINDENT = t:TERMINATOR i:INDENT {
