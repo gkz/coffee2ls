@@ -444,7 +444,7 @@ leftHandSideExpression = callExpression / newExpression / superExpression
     / secondaryExpression
 callExpression
   = fn:memberExpression accesses:accesses? secondaryArgs:("?"? secondaryArgumentList)? {
-      if(accesses) fn = createMemberExpression(fn, accesses);
+      if(accesses) fn = gc(createMemberExpression(fn, accesses));
       var soaked, secondaryCtor;
       if(secondaryArgs) {
         soaked = secondaryArgs[0];
@@ -471,7 +471,7 @@ memberExpression
     ( primaryExpression
     / NEW ws0:__ e:memberExpression args:argumentList { return gc(new CS.NewOp(e, args.operands[0]).r('new' + ws0 + e + args.raw).p(line, column, offset)); }
     ) accesses:MemberAccessOps* {
-      return createMemberExpression(e, accesses || []);
+      return gc(createMemberExpression(e, accesses || []));
     }
   / NEW ws0:__ e:memberExpression args:secondaryArgumentList {
       var raw = 'new' + ws0 + e.raw + args.raw;
@@ -482,7 +482,7 @@ memberExpression
     = e:( primaryExpression
       / NEW ws0:__ e:memberExpression args:argumentList { return gc(new CS.NewOp(e, args.operands[0]).r('new' + ws0 + e + args.raw).p(line, column, offset)); }
       ) acc:(argumentList MemberAccessOps / MemberAccessOps)+ {
-        return createMemberExpression(e, foldl(function(memo, a){ return memo.concat(a); }, [], acc));
+        return gc(createMemberExpression(e, foldl(function(memo, a){ return memo.concat(a); }, [], acc)));
       }
   accesses
     = acc0:(argumentList / MemberAccessOps)* td:TERMINDENT acc1:MemberAccessOps acc2:(argumentList / secondaryArgumentList / MemberAccessOps)* d:DEDENT {
@@ -633,7 +633,7 @@ class
     // or match a CallExpression that forbids implicit object literals
     / fn:memberExpression accesses:(argumentList (MemberAccessOps / argumentList)*)? {
         if(accesses)
-          fn = createMemberExpression(fn, [accesses[0]].concat(accesses[1] || []));
+          fn = gc(createMemberExpression(fn, [accesses[0]].concat(accesses[1] || [])));
         return fn;
       }
   classBody
@@ -833,7 +833,7 @@ objectLiteral
         return gc(new CS.ObjectInitialiserMember(v, v).r(v.raw).p(line, column, offset));
       }
   ObjectInitialiserKeys
-    = i:identifierName { return gc(new CS.Identifier(i).r(i).p(line, column, offset)); }
+    = i:identifierName { return new CS.Identifier(i).r(i).p(line, column, offset); }
     / string
     / Numbers
 // TODO: complete support for implicit objects
@@ -981,13 +981,13 @@ interpolation
       }
       // concat lines and create interpolation
       var es = [].concat.apply([], lines);
-      return createInterpolation(es).p(line, column, offset);
+      return gc(createInterpolation(es).p(line, column, offset));
     }
   / '"' es:
     ( d:(stringData / "'")+ { return gc(new CS.String(d.join('')).p(line, column, offset)); }
     / "#{" _ e:expression _ "}" { return e; }
     )+ '"' {
-      return createInterpolation(es).p(line, column, offset);
+      return gc(createInterpolation(es).p(line, column, offset));
     }
   interpolationPart
     = d:(stringLineData / "'" / s:('"' '"'? !'"') { return s.join(''); })+ { return gc(new CS.String(d.join('')).p(line, column, offset)); }
@@ -1003,7 +1003,7 @@ regexp
       if(!isValidRegExpFlags(flags))
         throw new SyntaxError(['regular expression flags'], 'regular expression flags', offset, line, column);
       if(!flags) flags = [];
-      var interp = createInterpolation(foldl(function(memo, e){ return memo.concat(e); }, [], es));
+      var interp = gc(createInterpolation(foldl(function(memo, e){ return memo.concat(e); }, [], es)));
       if(interp instanceof CS.String) return gc(new CS.RegExp(interp.data, flags).p(line, column, offset));
       return gc(new CS.HeregExp(interp, flags).p(line, column, offset));
     }
@@ -1104,7 +1104,7 @@ namedDestructuring
 
 // identifiers
 
-identifier = !reserved i:identifierName { return gc(new CS.Identifier(i).r(i).p(line, column, offset)); }
+identifier = !reserved i:identifierName { return new CS.Identifier(i).r(i).p(line, column, offset); }
 identifierName = c:identifierStart cs:identifierPart* { return c + cs.join(''); }
 identifierStart
   = UnicodeLetter

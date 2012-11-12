@@ -219,6 +219,7 @@ Nodes::toJSON = ->
     ]
     @raw
   }
+  json.comments = @comments if @comments
   for child in @childNodes
     if child in @listMembers
       json[child] = (p.toJSON() for p in @[child])
@@ -300,9 +301,13 @@ Class::initialise = ->
     # TODO: factor this out, as it's useful elsewhere: short object literal members, NFEs from assignee, etc.
     @name = switch
       when @nameAssignee.instanceof Identifier
-        new Identifier @nameAssignee.data
+        r = new Identifier @nameAssignee.data
+        r.comments = @nameAssignee.comments
+        r
       when @nameAssignee.instanceof StaticMemberAccessOps
-        new Identifier @nameAssignee.memberName
+        r = new Identifier @nameAssignee.memberName
+        r.comments = @nameAssignee.comments
+        r
       else @name
 Class::childNodes.push 'name'
 
