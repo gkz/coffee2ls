@@ -880,11 +880,12 @@ Numbers
 
 decimal
   // trailing and leading radix points are discouraged anyway
-  = integral:integer fractional:("." decimalDigit+)? {
-      if(fractional) fractional = "." + fractional[1].join('');
-      return fractional
-        ? gc(new CS.Float(parseFloat(integral + fractional, 10)).r(integral + fractional).p(line, column, offset))
-        : gc(new CS.Int(+integral).r(integral).p(line, column, offset));
+  = integral:integer? fractional:("." decimalDigit+) {
+      fractional = "." + fractional[1].join('');
+      return gc(new CS.Float(parseFloat((integral || 0) + fractional, 10)).r((integral || '') + fractional).p(line, column, offset));
+    }
+  / integral:integer {
+      return gc(new CS.Int(+integral).r(integral).p(line, column, offset));
     }
 
 integer
