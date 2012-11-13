@@ -183,7 +183,7 @@ postfixControlFlowOp
   / kw:(WHILE / UNTIL) ws:_ e:assignmentExpression { return {type: kw, cond: e, raw: kw + ws + e.raw}; }
   / FOR ws0:_ val:Assignable ws1:_ maybeKey:("," _ Assignable _)? IN ws2:_ list:assignmentExpression maybeStep:(_ BY _ assignmentExpression)? maybeFilter:(_ WHEN _ assignmentExpression)? {
       var key = maybeKey ? maybeKey[2] : null,
-          step = maybeStep ? maybeStep[3] : gc(new CS.Int(1).r('1').g()),
+          step = maybeStep ? maybeStep[3] : new CS.Int(1).r('1').g(),
           filter = maybeFilter ? maybeFilter[3] : null;
       return 0,
         { type: 'for-in'
@@ -444,14 +444,14 @@ leftHandSideExpression = callExpression / newExpression / superExpression
     / secondaryExpression
 callExpression
   = fn:memberExpression accesses:accesses? secondaryArgs:("?"? secondaryArgumentList)? {
-      if(accesses) fn = gc(createMemberExpression(fn, accesses));
+      if(accesses) fn = createMemberExpression(fn, accesses);
       var soaked, secondaryCtor;
       if(secondaryArgs) {
         soaked = secondaryArgs[0];
         secondaryCtor = soaked ? CS.SoakedFunctionApplication : CS.FunctionApplication;
-        fn = gc(new secondaryCtor(fn, secondaryArgs[1].list).r(fn.raw + secondaryArgs[1].raw).p(line, column, offset));
+        fn = new secondaryCtor(fn, secondaryArgs[1].list).r(fn.raw + secondaryArgs[1].raw).p(line, column, offset);
       }
-      return fn;
+      return gc(fn);
     }
 superExpression
   = SUPER args:argumentList {
@@ -469,20 +469,20 @@ newExpression
 memberExpression
   = e:
     ( primaryExpression
-    / NEW ws0:__ e:memberExpression args:argumentList { return gc(new CS.NewOp(e, args.operands[0]).r('new' + ws0 + e + args.raw).p(line, column, offset)); }
+    / NEW ws0:__ e:memberExpression args:argumentList { return new CS.NewOp(e, args.operands[0]).r('new' + ws0 + e + args.raw).p(line, column, offset); }
     ) accesses:MemberAccessOps* {
-      return gc(createMemberExpression(e, accesses || []));
+      return createMemberExpression(e, accesses || []);
     }
   / NEW ws0:__ e:memberExpression args:secondaryArgumentList {
       var raw = 'new' + ws0 + e.raw + args.raw;
-      return gc(new CS.NewOp(e, args.list).r(raw).p(line, column, offset));
+      return new CS.NewOp(e, args.list).r(raw).p(line, column, offset);
     }
   / superExpression
   memberAccess
     = e:( primaryExpression
-      / NEW ws0:__ e:memberExpression args:argumentList { return gc(new CS.NewOp(e, args.operands[0]).r('new' + ws0 + e + args.raw).p(line, column, offset)); }
+      / NEW ws0:__ e:memberExpression args:argumentList { return new CS.NewOp(e, args.operands[0]).r('new' + ws0 + e + args.raw).p(line, column, offset); }
       ) acc:(argumentList MemberAccessOps / MemberAccessOps)+ {
-        return gc(createMemberExpression(e, foldl(function(memo, a){ return memo.concat(a); }, [], acc)));
+        return createMemberExpression(e, foldl(function(memo, a){ return memo.concat(a); }, [], acc));
       }
   accesses
     = acc0:(argumentList / MemberAccessOps)* td:TERMINDENT acc1:MemberAccessOps acc2:(argumentList / secondaryArgumentList / MemberAccessOps)* d:DEDENT {
@@ -519,7 +519,7 @@ primaryExpression
   / null
   / undefined
   / contextVar
-  / r:(THIS / "@") { return gc((new CS.This).r(r).p(line, column, offset)); }
+  / r:(THIS / "@") { return (new CS.This).r(r).p(line, column, offset); }
   / identifier
   / range
   / arrayLiteral
@@ -540,12 +540,12 @@ primaryExpression
     }
   contextVar
     = "@" m:MemberNames {
-        return gc(new CS.MemberAccessOp(gc((new CS.This).r("@").p(line, column, offset)), m).r("@" + m).p(line, column, offset));
+        return new CS.MemberAccessOp((new CS.This).r("@").p(line, column, offset), m).r("@" + m).p(line, column, offset);
       }
   JSLiteral
     = "`" data:[^`]* "`" {
         data = data.join('');
-        return gc(new CS.JavaScript(data).r('`' + data + '`').p(line, column, offset));
+        return new CS.JavaScript(data).r('`' + data + '`').p(line, column, offset);
       }
 
 spread
@@ -779,13 +779,13 @@ range
   = "[" ws0:_ left:secondaryExpression ws1:_ ".." exclusiveDot:"."? ws2:_ right:secondaryExpression ws3:_ "]" {
       var raw = '[' + ws0 + left.raw + ws1 + '..' + exclusiveDot + ws2 + right.raw + ws3 + ']';
       var inclusive = !exclusiveDot;
-      return gc(new CS.Range(inclusive, left, right).r(raw).p(line, column, offset));
+      return new CS.Range(inclusive, left, right).r(raw).p(line, column, offset);
     }
 
 arrayLiteral
   = "[" members:arrayLiteralBody t:TERMINATOR? ws:_ "]" {
       var raw = "[" + members.raw + t + ws + "]";
-      return gc(new CS.ArrayInitialiser(members.list).r(raw).p(line, column, offset));
+      return new CS.ArrayInitialiser(members.list).r(raw).p(line, column, offset);
     }
   arrayLiteralBody
     = t:TERMINDENT members:arrayLiteralMemberList d:DEDENT { return {list: members.list, raw: t + members.raw + d}; }
@@ -809,7 +809,7 @@ arrayLiteral
 objectLiteral
   = "{" members:objectLiteralBody t:TERMINATOR? ws:_ "}" {
     var raw = '{' + members.raw + t + ws + '}'
-    return gc(new CS.ObjectInitialiser(members.list).r(raw).p(line, column, offset));
+    return new CS.ObjectInitialiser(members.list).r(raw).p(line, column, offset);
   }
   objectLiteralBody
     = t:TERMINDENT members:objectLiteralMemberList d:DEDENT { return {list: members.list, raw: t + members.raw + d}; }
@@ -823,14 +823,14 @@ objectLiteral
   objectLiteralMember
     = key:ObjectInitialiserKeys ws0:_ ":" ws1:_ val:expression {
         var raw = key.raw + ws0 + ':' + ws1 + val.raw;
-        return gc(new CS.ObjectInitialiserMember(key, val).r(raw).p(line, column, offset));
+        return new CS.ObjectInitialiserMember(key, val).r(raw).p(line, column, offset);
       }
     / v:contextVar {
-        var key = gc(new CS.String(v.memberName).r(v.memberName).p(line, column + 1));
-        return gc(new CS.ObjectInitialiserMember(key, v).r(v.raw).p(line, column, offset));
+        var key = new CS.String(v.memberName).r(v.memberName).p(line, column + 1);
+        return new CS.ObjectInitialiserMember(key, v).r(v.raw).p(line, column, offset);
       }
     / v:ObjectInitialiserKeys {
-        return gc(new CS.ObjectInitialiserMember(v, v).r(v.raw).p(line, column, offset));
+        return new CS.ObjectInitialiserMember(v, v).r(v.raw).p(line, column, offset);
       }
   ObjectInitialiserKeys
     = i:identifierName { return new CS.Identifier(i).r(i).p(line, column, offset); }
@@ -859,22 +859,22 @@ implicitObjectLiteral
 
 // TODO: __FILENAME__
 macro
-  = r:"__LINE__" { return gc(new CS.Int(line).r(r).p(line, column, offset)); }
-  / r:"__DATE__" { return gc(new CS.String(new Date().toDateString().slice(4)).r(r).p(line, column, offset)); }
-  / r:"__TIME__" { return gc(new CS.String(new Date().toTimeString().slice(0, 8)).r(r).p(line, column, offset)); }
-  / r:"__DATETIMEMS__" { return gc(new CS.Int(+new Date).r(r).p(line, column, offset)); }
+  = r:"__LINE__" { return new CS.Int(line).r(r).p(line, column, offset); }
+  / r:"__DATE__" { return new CS.String(new Date().toDateString().slice(4)).r(r).p(line, column, offset); }
+  / r:"__TIME__" { return new CS.String(new Date().toTimeString().slice(0, 8)).r(r).p(line, column, offset); }
+  / r:"__DATETIMEMS__" { return new CS.Int(+new Date).r(r).p(line, column, offset); }
 
 bool
-  = match:(TRUE / YES / ON) { return gc(new CS.Bool(true).r(match).p(line, column, offset)); }
-  / match:(FALSE / NO / OFF) { return gc(new CS.Bool(false).r(match).p(line, column, offset)); }
+  = match:(TRUE / YES / ON) { return new CS.Bool(true).r(match).p(line, column, offset); }
+  / match:(FALSE / NO / OFF) { return new CS.Bool(false).r(match).p(line, column, offset); }
 
 Numbers
-  = "0b" bs:bit+ { return gc(new CS.Int(parseInt(bs.join(''), 2)).r("0b" + bs).p(line, column, offset)); }
-  / "0o" os:octalDigit+ { return gc(new CS.Int(parseInt(os.join(''), 8)).r("0o" + os).p(line, column, offset)); }
-  / "0x" hs:hexDigit+ { return gc(new CS.Int(parseInt(hs.join(''), 16)).r("0x" + hs).p(line, column, offset)); }
+  = "0b" bs:bit+ { return new CS.Int(parseInt(bs.join(''), 2)).r("0b" + bs).p(line, column, offset); }
+  / "0o" os:octalDigit+ { return new CS.Int(parseInt(os.join(''), 8)).r("0o" + os).p(line, column, offset); }
+  / "0x" hs:hexDigit+ { return new CS.Int(parseInt(hs.join(''), 16)).r("0x" + hs).p(line, column, offset); }
   / base:decimal e:[eE] sign:[+-]? exponent:decimal {
       var raw = base.raw + e + sign + exponent.raw;
-      return gc(new CS.Float(parseFloat('' + base.data + e + sign + exponent.data, 10)).r(raw).p(line, column, offset));
+      return new CS.Float(parseFloat('' + base.data + e + sign + exponent.data, 10)).r(raw).p(line, column, offset);
     }
   / decimal
 
@@ -882,10 +882,10 @@ decimal
   // trailing and leading radix points are discouraged anyway
   = integral:integer? fractional:("." decimalDigit+) {
       fractional = "." + fractional[1].join('');
-      return gc(new CS.Float(parseFloat((integral || 0) + fractional, 10)).r((integral || '') + fractional).p(line, column, offset));
+      return new CS.Float(parseFloat((integral || 0) + fractional, 10)).r((integral || '') + fractional).p(line, column, offset);
     }
   / integral:integer {
-      return gc(new CS.Int(+integral).r(integral).p(line, column, offset));
+      return new CS.Int(+integral).r(integral).p(line, column, offset);
     }
 
 integer
@@ -902,14 +902,14 @@ bit = [01]
 string
   = '"""' d:(stringData / "'" / s:('"' '"'? !'"') { return s.join(''); })* '"""' {
       var data = stripLeadingWhitespace(d.join(''));
-      return gc(new CS.String(data).p(line, column, offset));
+      return new CS.String(data).p(line, column, offset);
     }
   / "'''" d:(stringData / '"' / "#" / s:("'" "'"? !"'") { return s.join(''); })* "'''" {
       var data = stripLeadingWhitespace(d.join(''));
-      return gc(new CS.String(data).p(line, column, offset));
+      return new CS.String(data).p(line, column, offset);
     }
-  / '"' d:(stringData / "'")* '"' { return gc(new CS.String(d ? d.join('') : '').p(line, column, offset)); }
-  / "'" d:(stringData / '"' / "#")* "'" { return gc(new CS.String(d ? d.join('') : '').p(line, column, offset)); }
+  / '"' d:(stringData / "'")* '"' { return new CS.String(d ? d.join('') : '').p(line, column, offset); }
+  / "'" d:(stringData / '"' / "#")* "'" { return new CS.String(d ? d.join('') : '').p(line, column, offset); }
   stringData
     = stringLineData
     / '\n'
@@ -936,7 +936,7 @@ interpolation
       while (!lines[0].length) {
         lines.shift();
         if (!lines[0]) {
-          return gc(new CS.String('').p(line, column, offset));
+          return new CS.String('').p(line, column, offset);
         }
       }
       // remove ending newlines
@@ -975,43 +975,43 @@ interpolation
           lines[i][0].data = lines[i][0].data.slice(dent);
           // don't add a newline to the end
           if (i < len - 1) {
-            lines[i].push(gc(new CS.String('\n')));
+            lines[i].push(new CS.String('\n'));
           }
           ++i;
         }
       }
       // concat lines and create interpolation
       var es = [].concat.apply([], lines);
-      return gc(createInterpolation(es).p(line, column, offset));
+      return createInterpolation(es).p(line, column, offset);
     }
   / '"' es:
-    ( d:(stringData / "'")+ { return gc(new CS.String(d.join('')).p(line, column, offset)); }
+    ( d:(stringData / "'")+ { return new CS.String(d.join('')).p(line, column, offset); }
     / "#{" _ e:expression _ "}" { return e; }
     )+ '"' {
-      return gc(createInterpolation(es).p(line, column, offset));
+      return createInterpolation(es).p(line, column, offset);
     }
   interpolationPart
-    = d:(stringLineData / "'" / s:('"' '"'? !'"') { return s.join(''); })+ { return gc(new CS.String(d.join('')).p(line, column, offset)); }
+    = d:(stringLineData / "'" / s:('"' '"'? !'"') { return s.join(''); })+ { return new CS.String(d.join('')).p(line, column, offset); }
     / "#{" _ e:expression _ "}" { return e; }
 
 // TODO: raw
 regexp
   = "///" es:
-    ( [ \r\n]+ { return [gc(new CS.String('').g().p(line, column, offset))]; }
-    / s:[^\\/#[ \r\n]+ { return [gc(new CS.String(s.join('')).g().p(line, column, offset))]; }
+    ( [ \r\n]+ { return [new CS.String('').g().p(line, column, offset)]; }
+    / s:[^\\/#[ \r\n]+ { return [new CS.String(s.join('')).g().p(line, column, offset)]; }
     / hereregexpData
     )+ "///" flags:[gimy]* {
       if(!isValidRegExpFlags(flags))
         throw new SyntaxError(['regular expression flags'], 'regular expression flags', offset, line, column);
       if(!flags) flags = [];
-      var interp = gc(createInterpolation(foldl(function(memo, e){ return memo.concat(e); }, [], es)));
-      if(interp instanceof CS.String) return gc(new CS.RegExp(interp.data, flags).p(line, column, offset));
-      return gc(new CS.HeregExp(interp, flags).p(line, column, offset));
+      var interp = createInterpolation(foldl(function(memo, e){ return memo.concat(e); }, [], es));
+      if(interp instanceof CS.String) return new CS.RegExp(interp.data, flags).p(line, column, offset);
+      return new CS.HeregExp(interp, flags).p(line, column, offset);
     }
   / "/" d:(regexpData / d:[^/\\[\n]+ { return d.join(''); })* "/" flags:[gimy]* {
       if(!isValidRegExpFlags(flags))
         throw new SyntaxError(['regular expression flags'], 'regular expression flags', offset, line, column);
-      return gc(new CS.RegExp(d ? d.join('') : '', flags || []).p(line, column, offset));
+      return new CS.RegExp(d ? d.join('') : '', flags || []).p(line, column, offset);
     }
   regexpData
     = "[" d:([^\\\]\n] / regexpData)* "]" { return "[" + d.join('') + "]"; }
@@ -1019,13 +1019,13 @@ regexp
   hereregexpData
     = "[" d:
       ( h:hereregexpData { return h[0]; }
-      / s:[^\\/\]] { return gc(new CS.String(s).p(line, column, offset)); }
+      / s:[^\\/\]] { return new CS.String(s).p(line, column, offset); }
       )* "]" {
-        return [gc(new CS.String("[").p(line, column, offset))].concat(d || []).concat([gc(new CS.String("]").p(line, column, offset))]);
+        return [new CS.String("[").p(line, column, offset)].concat(d || []).concat([new CS.String("]").p(line, column, offset)]);
       }
-    / "\\" c:. { return [gc(new CS.String('\\' + c).p(line, column, offset))]; }
-    / s:("/" "/"? !"/") { return [gc(new CS.String(s.join('')).p(line, column, offset))]; }
-    / c:"#" !"{" { return [gc(new CS.String(c).p(line, column, offset))]; }
+    / "\\" c:. { return [new CS.String('\\' + c).p(line, column, offset)]; }
+    / s:("/" "/"? !"/") { return [new CS.String(s.join('')).p(line, column, offset)]; }
+    / c:"#" !"{" { return [new CS.String(c).p(line, column, offset)]; }
     / "#{" _ e:expression _ "}" { return [e]; }
 
 
@@ -1043,8 +1043,8 @@ continue = CONTINUE { return (gc(new CS.Continue).r('continue').p(line, column, 
 break = BREAK { return (gc(new CS.Break).r('break').p(line, column, offset)); }
 
 
-undefined = UNDEFINED { return (gc(new CS.Undefined).r('undefined').p(line, column, offset)); }
-null = NULL { return (gc(new CS.Null).r('null').p(line, column, offset)); }
+undefined = UNDEFINED { return (new CS.Undefined).r('undefined').p(line, column, offset); }
+null = NULL { return (new CS.Null).r('null').p(line, column, offset); }
 
 
 unassignable = ("arguments" / "eval") !identifierPart
@@ -1055,7 +1055,7 @@ CompoundAssignable
 ExistsAssignable = CompoundAssignable
 Assignable
   = memberAccess
-  / !unassignable i:identifier { return i; }
+  / !unassignable i:identifier { return gc(i); }
   / contextVar
   / positionalDestructuring
   / namedDestructuring
