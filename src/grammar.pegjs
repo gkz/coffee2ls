@@ -788,23 +788,22 @@ arrayLiteral
       return new CS.ArrayInitialiser(members.list).r(raw).p(line, column, offset);
     }
   arrayLiteralBody
-    = t:TERMINDENT members:arrayLiteralMemberList d:DEDENT { return {list: members.list, raw: t + members.raw + d}; }
-    / ws:_ members:arrayLiteralMemberList? { return {list: members ? members.list : [], raw: ws + members ? members.raw : ''}; }
+    = ws:_ members:arrayLiteralMemberList? { return {list: members ? members.list : [], raw: ws + members ? members.raw : ''}; }
   arrayLiteralMemberList
-    = e:arrayLiteralMember ws:_ es:(arrayLiteralMemberSeparator _ arrayLiteralMember _)* trail:arrayLiteralMemberSeparator? {
-        var raw = e.raw + ws + es.map(function(e){ return e[0] + e[1] + e[2].raw + e[3]; }).join('') + trail;
-        return {list: [e].concat(es.map(function(e){ return e[2]; })), raw: raw};
+    = as:( TERMINATOR? INDENT a:arrayLiteralMembers DEDENT _ arrayLiteralMemberSeparator { return a; } / _ a:arrayLiteralMembers { return a; })+ _ arrayLiteralMemberSeparator? {
+        return {list: [].concat.apply([], as), raw: ''}
       }
+    / as:( TERMINATOR? INDENT a:arrayLiteralMembers DEDENT { return a; } / _ a:arrayLiteralMembers { return a; })* ia:(TERMINDENT a:arrayLiteralMembers _ arrayLiteralMemberSeparator? DEDENT { return a; }) {
+        return {list: [].concat.apply([], as.concat(ia)), raw: ''}
+      }
+  arrayLiteralMembers
+    = e:arrayLiteralMember _ es:(arrayLiteralMemberSeparator _ m:arrayLiteralMember _ { return m; })* { return [e].concat(es); }
   arrayLiteralMember
     = spread
     / expression
-    / TERMINDENT o:implicitObjectLiteral DEDENT { return o; }
   arrayLiteralMemberSeparator
     = t:TERMINATOR ws:_ c:","? { return t + ws + c; }
     / "," t:TERMINATOR? _ { return ',' + t; }
-    // TODO: fix this:
-    // d:DEDENT "," t:TERMINDENT { return d + ',' + t; }
-
 
 objectLiteral
   = "{" members:objectLiteralBody t:TERMINATOR? ws:_ "}" {

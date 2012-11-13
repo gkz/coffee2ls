@@ -80,15 +80,22 @@ suite 'Arrays', ->
       b = [(x) -> x * x, ->, (x) ->  x, ->]
       ok b.length is 4
 
-    # REDUX ERROR - dedent commas
-    #test 'dedented comma style', ->
-    #  eq 3, [
-    #    0
-    #  ,
-    #    0
-    #  ,
-    #    0
-    #  ].length
+    test 'dedented comma style', ->
+      eq 3, [
+        0
+      ,
+        0
+      ,
+        0
+      ].length
+
+      arr = [
+        a: 1
+      , a: 2
+      ]
+      eq 2, arr.length
+      eq 1, arr[0].a
+      eq 2, arr[1].a
 
     test 'jashkenas/coffee-script#1274: `[] = a()` compiles to `false` instead of `a()`', ->
       a = false
