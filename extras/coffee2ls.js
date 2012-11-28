@@ -783,7 +783,8 @@ createNodes = function (subclasses, superclasses) {
     }(className));
   }
 };
-createNodes({Nodes: [
+createNodes({
+  Nodes: [
     [],
     {
       BinOps: [
@@ -1050,7 +1051,8 @@ createNodes({Nodes: [
       Rest: [['expression']],
       Spread: [['expression']]
     }
-  ]});
+  ]
+});
 cache$1 = exports;
 Nodes = cache$1.Nodes;
 Primitives = cache$1.Primitives;
@@ -1095,6 +1097,8 @@ Nodes.prototype.toJSON = function () {
     ],
     'raw': this.raw
   };
+  if (this.comments)
+    json.comments = this.comments;
   for (var i$ = 0, length$ = this.childNodes.length; i$ < length$; ++i$) {
     child = this.childNodes[i$];
     if (in$(child, this.listMembers)) {
@@ -1222,11 +1226,16 @@ Class.prototype.initialise = function () {
   this.name = new GenSym('class');
   if (null != this.nameAssignee)
     return this.name = function () {
+      var r;
       switch (false) {
       case !this.nameAssignee['instanceof'](Identifier):
-        return new Identifier(this.nameAssignee.data);
+        r = new Identifier(this.nameAssignee.data);
+        r.comments = this.nameAssignee.comments;
+        return r;
       case !this.nameAssignee['instanceof'](StaticMemberAccessOps):
-        return new Identifier(this.nameAssignee.memberName);
+        r = new Identifier(this.nameAssignee.memberName);
+        r.comments = this.nameAssignee.comments;
+        return r;
       default:
         return this.name;
       }
@@ -2453,6 +2462,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
         "arrayLiteral": parse_arrayLiteral,
         "arrayLiteralBody": parse_arrayLiteralBody,
         "arrayLiteralMemberList": parse_arrayLiteralMemberList,
+        "arrayLiteralMembers": parse_arrayLiteralMembers,
         "arrayLiteralMember": parse_arrayLiteralMember,
         "arrayLiteralMemberSeparator": parse_arrayLiteralMemberSeparator,
         "objectLiteral": parse_objectLiteral,
@@ -2476,7 +2486,9 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
         "bit": parse_bit,
         "string": parse_string,
         "stringData": parse_stringData,
+        "stringLineData": parse_stringLineData,
         "interpolation": parse_interpolation,
+        "interpolationPart": parse_interpolationPart,
         "regexp": parse_regexp,
         "regexpData": parse_regexpData,
         "hereregexpData": parse_hereregexpData,
@@ -2698,9 +2710,9 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
               var block;
               if(b) {
                 block = b[1];
-                return new CS.Program(block).r(leader + b[0] + block.raw).p(line, column, offset);
+                return gc(new CS.Program(block).r(leader + b[0] + block.raw).p(line, column, offset));
               } else {
-                return new CS.Program().r(leader).p(line, column, offset);
+                return gc(new CS.Program().r(leader).p(line, column, offset));
               }
             })(r1.offset, r1.line, r1.column, r3, r4);
         }
@@ -2805,7 +2817,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
         if (r0 !== null) {
           r0 = (function(offset, line, column, s, ss, term) {
               var raw = s.raw + ss.map(function(s){ return s[0] + s[1] + s[2] + s[3].raw; }).join('') + term;
-              return new CS.Block([s].concat(ss.map(function(s){ return s[3]; }))).r(raw).p(line, column, offset);
+              return gc(new CS.Block([s].concat(ss.map(function(s){ return s[3]; }))).r(raw).p(line, column, offset));
             })(r1.offset, r1.line, r1.column, r3, r4, r5);
         }
         if (r0 === null) {
@@ -2963,7 +2975,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
         if (r0 !== null) {
           r0 = (function(offset, line, column, s, ss, term) {
               var raw = s.raw + ss.map(function(s){ return s[0] + s[1] + s[2] + s[3].raw; }).join('') + term;
-              return new CS.Block([s].concat(ss.map(function(s){ return s[3]; }))).r(raw).p(line, column, offset);
+              return gc(new CS.Block([s].concat(ss.map(function(s){ return s[3]; }))).r(raw).p(line, column, offset));
             })(r1.offset, r1.line, r1.column, r3, r4, r5);
         }
         if (r0 === null) {
@@ -3199,7 +3211,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
           r0 = (function(offset, line, column, left, right) {
               if(!right) return left;
               var raw = left.raw + right[0] + right[1] + right[2] + right[3] + right[4].raw;
-              return new CS.SeqOp(left, right[4]).r(raw).p(line, column, offset);
+              return gc(new CS.SeqOp(left, right[4]).r(raw).p(line, column, offset));
             })(r1.offset, r1.line, r1.column, r3, r4);
         }
         if (r0 === null) {
@@ -3685,20 +3697,20 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
                   case 'unless':
                     raw = expr.raw + ws + postfix.raw;
                     constructor = (indicator == 'unless') ? CS.NegatedConditional : CS.Conditional;
-                    cond = (indicator == 'unless') ? new CS.LogicalNotOp(postfix.cond).g() : postfix.cond;
-                    return new constructor(cond, expr, null).r(raw).p(line, column, offset)
+                    cond = (indicator == 'unless') ? gc(new CS.LogicalNotOp(postfix.cond).g()) : postfix.cond;
+                    return gc(new constructor(cond, expr, null).r(raw).p(line, column, offset));
                   case 'while':
                   case 'until':
                     raw = expr.raw + ws + postfix.raw;
                     constructor = (indicator == 'until') ? CS.NegatedWhile : CS.While;
-                    cond = (indicator == 'until') ? new CS.LogicalNotOp(postfix.cond).g() : postfix.cond;
-                    return new constructor(cond, expr).r(raw).p(line, column, offset)
+                    cond = (indicator == 'until') ? gc(new CS.LogicalNotOp(postfix.cond).g()) : postfix.cond;
+                    return gc(new constructor(cond, expr).r(raw).p(line, column, offset));
                   case 'for-in':
                     raw = expr.raw + ws + postfix.raw;
-                    return new CS.ForIn(postfix.val, postfix.key, postfix.list, postfix.step, postfix.filter, expr).r(raw).p(line, column, offset);
+                    return gc(new CS.ForIn(postfix.val, postfix.key, postfix.list, postfix.step, postfix.filter, expr).r(raw).p(line, column, offset));
                   case 'for-of':
                     raw = expr.raw + ws + postfix.raw;
-                    return new CS.ForOf(postfix.own, postfix.key, postfix.val, postfix.obj, postfix.filter, expr).r(raw).p(line, column, offset);
+                    return gc(new CS.ForOf(postfix.own, postfix.key, postfix.val, postfix.obj, postfix.filter, expr).r(raw).p(line, column, offset));
                 }
               }, expr, postfixes)
             })(r1.offset, r1.line, r1.column, r3, r4);
@@ -3869,7 +3881,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
         if (r0 !== null) {
           r0 = (function(offset, line, column, left, ws0, right) {
                 var raw = left.raw + ws0 + '=' + right.raw;
-                return new CS.AssignOp(left, right.expr).r(raw).p(line, column, offset);
+                return gc(new CS.AssignOp(left, right.expr).r(raw).p(line, column, offset));
               })(r1.offset, r1.line, r1.column, r3, r4, r7);
         }
         if (r0 === null) {
@@ -4169,7 +4181,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
         if (r0 !== null) {
           r0 = (function(offset, line, column, left, ws0, op, right) {
                 var raw = left.raw + ws0 + op + '=' + right.raw;
-                return new CS.CompoundAssignOp(constructorLookup[op].prototype.className, left, right.expr).r(raw).p(line, column, offset);
+                return gc(new CS.CompoundAssignOp(constructorLookup[op].prototype.className, left, right.expr).r(raw).p(line, column, offset));
               })(r1.offset, r1.line, r1.column, r3, r4, r5, r7);
         }
         if (r0 === null) {
@@ -4293,7 +4305,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
         if (r0 !== null) {
           r0 = (function(offset, line, column, left, ws0, ws1, right) {
                 var raw = left.raw + ws0 + '?=' + right.raw;
-                return new CS.ExistsAssignOp(left, right.expr).r(raw).p(line, column, offset);
+                return gc(new CS.ExistsAssignOp(left, right.expr).r(raw).p(line, column, offset));
               })(r1.offset, r1.line, r1.column, r3, r4, r6, r7);
         }
         if (r0 === null) {
@@ -4480,7 +4492,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
               if(!rights) return left;
               return foldl(function(expr, right){
                 var raw = left.raw + right[0] + right[1] + right[3] + right[4] + right[5].raw;
-                return new CS.LogicalOrOp(expr, right[5]).r(raw).p(line, column, offset);
+                return gc(new CS.LogicalOrOp(expr, right[5]).r(raw).p(line, column, offset));
               }, left, rights);
             })(r1.offset, r1.line, r1.column, r3, r4);
         }
@@ -4668,7 +4680,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
               if(!rights) return left;
               return foldl(function(expr, right){
                 var raw = left.raw + right[0] + right[1] + right[3] + right[4] + right[5].raw;
-                return new CS.LogicalAndOp(expr, right[5]).r(raw).p(line, column, offset);
+                return gc(new CS.LogicalAndOp(expr, right[5]).r(raw).p(line, column, offset));
               }, left, rights);
             })(r1.offset, r1.line, r1.column, r3, r4);
         }
@@ -4850,7 +4862,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
               if(!rights) return left;
               return foldl(function(expr, right){
                 var raw = left.raw + right[0] + right[1] + right[3] + right[4] + right[5].raw;
-                return new CS.BitOrOp(expr, right[5]).r(raw).p(line, column, offset);
+                return gc(new CS.BitOrOp(expr, right[5]).r(raw).p(line, column, offset));
               }, left, rights);
             })(r1.offset, r1.line, r1.column, r3, r4);
         }
@@ -5032,7 +5044,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
               if(!rights) return left;
               return foldl(function(expr, right){
                 var raw = left.raw + right[0] + right[1] + right[3] + right[4] + right[5].raw;
-                return new CS.BitXorOp(expr, right[5]).r(raw).p(line, column, offset);
+                return gc(new CS.BitXorOp(expr, right[5]).r(raw).p(line, column, offset));
               }, left, rights);
             })(r1.offset, r1.line, r1.column, r3, r4);
         }
@@ -5214,7 +5226,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
               if(!rights) return left;
               return foldl(function(expr, right){
                 var raw = left.raw + right[0] + right[1] + right[3] + right[4] + right[5].raw;
-                return new CS.BitAndOp(expr, right[5]).r(raw).p(line, column, offset);
+                return gc(new CS.BitAndOp(expr, right[5]).r(raw).p(line, column, offset));
               }, left, rights);
             })(r1.offset, r1.line, r1.column, r3, r4);
         }
@@ -5325,7 +5337,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
           r0 = (function(offset, line, column, left, right) {
               if(!right) return left;
               var raw = left.raw + right[0] + right[1] + right[3] + right[4] + right[5].raw;
-              return new CS.ExistsOp(left, right[5]).r(raw).p(line, column, offset);
+              return gc(new CS.ExistsOp(left, right[5]).r(raw).p(line, column, offset));
             })(r1.offset, r1.line, r1.column, r3, r4);
         }
         if (r0 === null) {
@@ -5568,9 +5580,9 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
               if(!rights) return left;
               var tree = foldl(function(expr, right){
                 var raw = expr.raw + right[0] + right[1] + right[2] + right[3].raw;
-                return new constructorLookup[right[1]](expr, right[3]).r(raw).p(line, column, offset);
+                return gc(new constructorLookup[right[1]](expr, right[3]).r(raw).p(line, column, offset));
               }, left, rights);
-              return rights.length < 2 ? tree : new CS.ChainedComparisonOp(tree).r(tree.raw).p(line, column, offset);
+              return rights.length < 2 ? tree : gc(new CS.ChainedComparisonOp(tree).r(tree.raw).p(line, column, offset));
             })(r1.offset, r1.line, r1.column, r3, r4);
         }
         if (r0 === null) {
@@ -5728,7 +5740,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
         if (r0 !== null) {
           r0 = (function(offset, line, column, op) {
                 var fn = function(left, right, raw, line, column, offset){
-                  return new constructorLookup[op](left, right).r(raw).p(line, column, offset);
+                  return gc(new constructorLookup[op](left, right).r(raw).p(line, column, offset));
                 };
                 fn.raw = op;
                 return fn;
@@ -5768,7 +5780,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
           if (r0 !== null) {
             r0 = (function(offset, line, column, ws, op) {
                   var fn = function(left, right, raw, line, column, offset){
-                    return new CS.LogicalNotOp(new constructorLookup[op](left, right).r(raw).p(line, column, offset)).r(raw).g();
+                    return gc(new CS.LogicalNotOp(gc(new constructorLookup[op](left, right).r(raw).p(line, column, offset))).r(raw).g());
                   };
                   fn.raw = 'not' + ws + op;
                   return fn;
@@ -5997,7 +6009,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
               if(!rights) return left;
               return foldl(function(expr, right){
                 var raw = left.raw + right[0] + right[1] + right[3] + right[4] + right[5].raw;
-                return new constructorLookup[right[1]](expr, right[5]).r(raw).p(line, column, offset);
+                return gc(new constructorLookup[right[1]](expr, right[5]).r(raw).p(line, column, offset));
               }, left, rights);
             })(r1.offset, r1.line, r1.column, r3, r4);
         }
@@ -6275,7 +6287,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
               if(!rights) return left;
               return foldl(function(expr, right){
                 var raw = expr.raw + right[0] + right[1][0] + right[2] + right[3] + right[4].raw;
-                return new constructorLookup[right[1][0]](expr, right[4]).r(raw).p(line, column, offset);
+                return gc(new constructorLookup[right[1][0]](expr, right[4]).r(raw).p(line, column, offset));
               }, left, rights);
             })(r1.offset, r1.line, r1.column, r3, r4);
         }
@@ -6457,7 +6469,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
               if(!rights) return left;
               return foldl(function(expr, right){
                 var raw = left.raw + right[0] + right[1] + right[3] + right[4] + right[5].raw;
-                return new constructorLookup[right[1]](expr, right[5]).r(raw).p(line, column, offset);
+                return gc(new constructorLookup[right[1]](expr, right[5]).r(raw).p(line, column, offset));
               }, left, rights);
             })(r1.offset, r1.line, r1.column, r3, r4);
         }
@@ -6568,7 +6580,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
           r0 = (function(offset, line, column, left, right) {
               if(!right) return left;
               var raw = left.raw + right[0] + right[1] + right[3] + right[4] + right[5].raw;
-              return new CS.ExpOp(left, right[5]).r(raw).p(line, column, offset);
+              return gc(new CS.ExpOp(left, right[5]).r(raw).p(line, column, offset));
             })(r1.offset, r1.line, r1.column, r3, r4);
         }
         if (r0 === null) {
@@ -6627,7 +6639,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
             pos = clone(r2);
           }
           if (r0 !== null) {
-            r0 = (function(offset, line, column, ws, e) { return new CS.PreIncrementOp(e).r('++' + ws + e.raw).p(line, column, offset); })(r1.offset, r1.line, r1.column, r4, r5);
+            r0 = (function(offset, line, column, ws, e) { return gc(new CS.PreIncrementOp(e).r('++' + ws + e.raw).p(line, column, offset)); })(r1.offset, r1.line, r1.column, r4, r5);
           }
           if (r0 === null) {
             pos = clone(r1);
@@ -6666,7 +6678,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
               pos = clone(r2);
             }
             if (r0 !== null) {
-              r0 = (function(offset, line, column, ws, e) { return new CS.PreDecrementOp(e).r('--' + ws + e.raw).p(line, column, offset); })(r1.offset, r1.line, r1.column, r4, r5);
+              r0 = (function(offset, line, column, ws, e) { return gc(new CS.PreDecrementOp(e).r('--' + ws + e.raw).p(line, column, offset)); })(r1.offset, r1.line, r1.column, r4, r5);
             }
             if (r0 === null) {
               pos = clone(r1);
@@ -6705,7 +6717,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
                 pos = clone(r2);
               }
               if (r0 !== null) {
-                r0 = (function(offset, line, column, ws, e) { return new CS.UnaryPlusOp(e).r('+' + ws + e.raw).p(line, column, offset); })(r1.offset, r1.line, r1.column, r4, r5);
+                r0 = (function(offset, line, column, ws, e) { return gc(new CS.UnaryPlusOp(e).r('+' + ws + e.raw).p(line, column, offset)); })(r1.offset, r1.line, r1.column, r4, r5);
               }
               if (r0 === null) {
                 pos = clone(r1);
@@ -6744,7 +6756,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
                   pos = clone(r2);
                 }
                 if (r0 !== null) {
-                  r0 = (function(offset, line, column, ws, e) { return new CS.UnaryNegateOp(e).r('-' + ws + e.raw).p(line, column, offset); })(r1.offset, r1.line, r1.column, r4, r5);
+                  r0 = (function(offset, line, column, ws, e) { return gc(new CS.UnaryNegateOp(e).r('-' + ws + e.raw).p(line, column, offset)); })(r1.offset, r1.line, r1.column, r4, r5);
                 }
                 if (r0 === null) {
                   pos = clone(r1);
@@ -6786,7 +6798,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
                     pos = clone(r2);
                   }
                   if (r0 !== null) {
-                    r0 = (function(offset, line, column, o, ws, e) { return new CS.LogicalNotOp(e).r(o + ws + e.raw).p(line, column, offset); })(r1.offset, r1.line, r1.column, r3, r4, r5);
+                    r0 = (function(offset, line, column, o, ws, e) { return gc(new CS.LogicalNotOp(e).r(o + ws + e.raw).p(line, column, offset)); })(r1.offset, r1.line, r1.column, r3, r4, r5);
                   }
                   if (r0 === null) {
                     pos = clone(r1);
@@ -6825,7 +6837,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
                       pos = clone(r2);
                     }
                     if (r0 !== null) {
-                      r0 = (function(offset, line, column, ws, e) { return new CS.BitNotOp(e).r('~' + ws + e.raw).p(line, column, offset); })(r1.offset, r1.line, r1.column, r4, r5);
+                      r0 = (function(offset, line, column, ws, e) { return gc(new CS.BitNotOp(e).r('~' + ws + e.raw).p(line, column, offset)); })(r1.offset, r1.line, r1.column, r4, r5);
                     }
                     if (r0 === null) {
                       pos = clone(r1);
@@ -6901,7 +6913,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
                       }
                       if (r0 !== null) {
                         r0 = (function(offset, line, column, ws0, a, ws1, ws2, f) {
-                            return new CS.DoOp(new CS.AssignOp(a, f)).r('do' + ws0 + a.raw + ws1 + '+' + ws2 + f.raw).p(line, column, offset);
+                            return gc(new CS.DoOp(gc(new CS.AssignOp(a, f))).r('do' + ws0 + a.raw + ws1 + '+' + ws2 + f.raw).p(line, column, offset));
                           })(r1.offset, r1.line, r1.column, r4, r6, r7, r9, r10);
                       }
                       if (r0 === null) {
@@ -6933,7 +6945,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
                           pos = clone(r2);
                         }
                         if (r0 !== null) {
-                          r0 = (function(offset, line, column, ws, e) { return new CS.DoOp(e).r('do' + ws + e.raw).p(line, column, offset); })(r1.offset, r1.line, r1.column, r4, r5);
+                          r0 = (function(offset, line, column, ws, e) { return gc(new CS.DoOp(e).r('do' + ws + e.raw).p(line, column, offset)); })(r1.offset, r1.line, r1.column, r4, r5);
                         }
                         if (r0 === null) {
                           pos = clone(r1);
@@ -6964,7 +6976,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
                             pos = clone(r2);
                           }
                           if (r0 !== null) {
-                            r0 = (function(offset, line, column, ws, e) { return new CS.TypeofOp(e).r('typeof' + ws + e.raw).p(line, column, offset); })(r1.offset, r1.line, r1.column, r4, r5);
+                            r0 = (function(offset, line, column, ws, e) { return gc(new CS.TypeofOp(e).r('typeof' + ws + e.raw).p(line, column, offset)); })(r1.offset, r1.line, r1.column, r4, r5);
                           }
                           if (r0 === null) {
                             pos = clone(r1);
@@ -6995,7 +7007,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
                               pos = clone(r2);
                             }
                             if (r0 !== null) {
-                              r0 = (function(offset, line, column, ws, e) { return new CS.DeleteOp(e).r('delete' + ws + e.raw).p(line, column, offset); })(r1.offset, r1.line, r1.column, r4, r5);
+                              r0 = (function(offset, line, column, ws, e) { return gc(new CS.DeleteOp(e).r('delete' + ws + e.raw).p(line, column, offset)); })(r1.offset, r1.line, r1.column, r4, r5);
                             }
                             if (r0 === null) {
                               pos = clone(r1);
@@ -7135,10 +7147,10 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
               return foldl(function(expr, op){
                 var raw;
                 switch(op){
-                  case '?': return new CS.UnaryExistsOp(expr).r(expr.raw + op).p(line, column, offset)
-                  case '[..]': return new CS.ShallowCopyArray(expr).r(expr.raw + op).p(line, column, offset)
-                  case '++': return new CS.PostIncrementOp(expr).r(expr.raw + op).p(line, column, offset)
-                  case '--': return new CS.PostDecrementOp(expr).r(expr.raw + op).p(line, column, offset)
+                  case '?': return gc(new CS.UnaryExistsOp(expr).r(expr.raw + op).p(line, column, offset));
+                  case '[..]': return gc(new CS.ShallowCopyArray(expr).r(expr.raw + op).p(line, column, offset));
+                  case '++': return gc(new CS.PostIncrementOp(expr).r(expr.raw + op).p(line, column, offset));
+                  case '--': return gc(new CS.PostDecrementOp(expr).r(expr.raw + op).p(line, column, offset));
                 }
               }, expr, ops);
             })(r1.offset, r1.line, r1.column, r3, r4);
@@ -8009,7 +8021,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
                 secondaryCtor = soaked ? CS.SoakedFunctionApplication : CS.FunctionApplication;
                 fn = new secondaryCtor(fn, secondaryArgs[1].list).r(fn.raw + secondaryArgs[1].raw).p(line, column, offset);
               }
-              return fn;
+              return gc(fn);
             })(r1.offset, r1.line, r1.column, r3, r4, r5);
         }
         if (r0 === null) {
@@ -8050,7 +8062,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
         }
         if (r0 !== null) {
           r0 = (function(offset, line, column, args) {
-              return new CS.Super(args.operands[0]).r('super' + args.raw).p(line, column, offset);
+              return gc(new CS.Super(args.operands[0]).r('super' + args.raw).p(line, column, offset));
             })(r1.offset, r1.line, r1.column, r4);
         }
         if (r0 === null) {
@@ -8076,7 +8088,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
           if (r0 !== null) {
             r0 = (function(offset, line, column, args) {
                 var a = args ? args.list : [];
-                return new CS.Super(a).r('super' + args.raw).p(line, column, offset);
+                return gc(new CS.Super(a).r('super' + args.raw).p(line, column, offset));
             })(r1.offset, r1.line, r1.column, r4);
           }
           if (r0 === null) {
@@ -8132,7 +8144,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
           }
           if (r0 !== null) {
             r0 = (function(offset, line, column, ws, e) {
-                return new CS.NewOp(e, []).r('new' + ws + e.raw).p(line, column, offset);
+                return gc(new CS.NewOp(e, []).r('new' + ws + e.raw).p(line, column, offset));
               })(r1.offset, r1.line, r1.column, r4, r5);
           }
           if (r0 === null) {
@@ -9437,7 +9449,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
         }
         if (r0 !== null) {
           r0 = (function(offset, line, column, e) {
-              return new CS.Spread(e).r(e.raw + "...").p(line, column, offset);
+              return gc(new CS.Spread(e).r(e.raw + "...").p(line, column, offset));
             })(r1.offset, r1.line, r1.column, r3);
         }
         if (r0 === null) {
@@ -9502,9 +9514,9 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
           r0 = (function(offset, line, column, kw, ws0, cond, body, elseClause) {
               var raw = kw + ws0 + cond.raw + body.raw + (elseClause ? elseClause.raw : '');
               var constructor = kw == 'unless' ? CS.NegatedConditional : CS.Conditional;
-              if(kw == 'unless') cond = new CS.LogicalNotOp(cond).g();
+              if(kw == 'unless') cond = gc(new CS.LogicalNotOp(cond).g());
               var elseBlock = elseClause ? elseClause.block : null;
-              return new constructor(cond, body.block, elseBlock).r(raw).p(line, column, offset);
+              return gc(new constructor(cond, body.block, elseBlock).r(raw).p(line, column, offset));
             })(r1.offset, r1.line, r1.column, r3, r4, r5, r6, r7);
         }
         if (r0 === null) {
@@ -9740,8 +9752,8 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
           r0 = (function(offset, line, column, kw, ws, cond, body) {
               var raw = kw + ws + cond.raw + body.raw;
               var constructor = kw == 'until' ? CS.NegatedWhile : CS.While;
-              if(kw == 'until') cond = new CS.LogicalNotOp(cond).g();
-              return new constructor(cond, body.block).r(raw).p(line, column, offset);
+              if(kw == 'until') cond = gc(new CS.LogicalNotOp(cond).g());
+              return gc(new constructor(cond, body.block).r(raw).p(line, column, offset));
             })(r1.offset, r1.line, r1.column, r3, r4, r5, r6);
         }
         if (r0 === null) {
@@ -9782,7 +9794,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
         }
         if (r0 !== null) {
           r0 = (function(offset, line, column, body) {
-              return new CS.Loop(body.block).r('loop' + body.raw).p(line, column, offset);
+              return gc(new CS.Loop(body.block).r('loop' + body.raw).p(line, column, offset));
             })(r1.offset, r1.line, r1.column, r4);
         }
         if (r0 === null) {
@@ -9838,7 +9850,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
         if (r0 !== null) {
           r0 = (function(offset, line, column, body, c, f) {
               var raw = 'try' + body.block + (c ? c.raw : '') + (f ? f.raw : '');
-              return new CS.Try(body.block, c ? c.assignee : null, c ? c.block : null, f ? f.block : null).r(raw).p(line, column, offset);
+              return gc(new CS.Try(body.block, c ? c.assignee : null, c ? c.block : null, f ? f.block : null).r(raw).p(line, column, offset));
             })(r1.offset, r1.line, r1.column, r4, r5, r6);
         }
         if (r0 === null) {
@@ -10089,7 +10101,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
                   boundMembers.push(m);
                 }
               }
-              return new CS.Class(name, parent, ctor, body.block, boundMembers).r(raw).p(line, column, offset);
+              return gc(new CS.Class(name, parent, ctor, body.block, boundMembers).r(raw).p(line, column, offset));
             })(r1.offset, r1.line, r1.column, r4, r5, r6);
         }
         if (r0 === null) {
@@ -10225,7 +10237,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
             if (r0 !== null) {
               r0 = (function(offset, line, column, fn, accesses) {
                     if(accesses)
-                      fn = createMemberExpression(fn, [accesses[0]].concat(accesses[1] || []));
+                      fn = gc(createMemberExpression(fn, [accesses[0]].concat(accesses[1] || [])));
                     return fn;
                   })(r1.offset, r1.line, r1.column, r3, r4);
             }
@@ -10446,7 +10458,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
         if (r0 !== null) {
           r0 = (function(offset, line, column, s, ss, term) {
                 var raw = s.raw + ss.map(function(s){ return s[0] + s[1] + s[2] + s[3].raw; }).join('') + term;
-                return new CS.Block([s].concat(ss.map(function(s){ return s[3]; }))).r(raw).p(line, column, offset);
+                return gc(new CS.Block([s].concat(ss.map(function(s){ return s[3]; }))).r(raw).p(line, column, offset));
               })(r1.offset, r1.line, r1.column, r3, r4, r5);
         }
         if (r0 === null) {
@@ -10601,8 +10613,8 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
                 var raw = key.raw + ws0 + ":" + ws1 + e.raw;
                 e = e.expr;
                 if(e.instanceof(CS.BoundFunction))
-                  e = new CS.Function(e.parameters, e.block).r(e.raw).p(e.line, e.column);
-                return new CS.Constructor(e).r(raw).p(line, column, offset);
+                  e = gc(new CS.Function(e.parameters, e.block).r(e.raw).p(e.line, e.column));
+                return gc(new CS.Constructor(e).r(raw).p(line, column, offset));
               })(r1.offset, r1.line, r1.column, r3, r4, r6, r7);
         }
         if (r0 === null) {
@@ -10670,7 +10682,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
         if (r0 !== null) {
           r0 = (function(offset, line, column, key, ws0, ws1, e) {
                 var raw = key.raw + ws0 + ":" + ws1 + e.raw;
-                return new CS.AssignOp(key, e).r(raw).p(line, column, offset);
+                return gc(new CS.AssignOp(key, e).r(raw).p(line, column, offset));
               })(r1.offset, r1.line, r1.column, r3, r4, r6, r7);
         }
         if (r0 === null) {
@@ -10795,7 +10807,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
           r0 = (function(offset, line, column, key, ws0, ws1, e) {
                 if(key.data === 'constructor') return null;
                 var raw = key.raw + ws0 + ":" + ws1 + e.raw;
-                return new CS.ClassProtoAssignOp(key, e.expr).r(raw).p(line, column, offset);
+                return gc(new CS.ClassProtoAssignOp(key, e.expr).r(raw).p(line, column, offset));
               })(r1.offset, r1.line, r1.column, r3, r4, r6, r7);
         }
         if (r0 === null) {
@@ -10977,7 +10989,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
                 body.raw;
               var val = maybeVal ? maybeVal[2] : null;
               var filter = maybeFilter ? maybeFilter[2] : null;
-              return new CS.ForOf(!!own, key, val, obj, filter, body.block).r(raw).p(line, column, offset);
+              return gc(new CS.ForOf(!!own, key, val, obj, filter, body.block).r(raw).p(line, column, offset));
             })(r1.offset, r1.line, r1.column, r4, r5, r6, r7, r8, r10, r11, r12, r13, r14);
         }
         if (r0 === null) {
@@ -11171,9 +11183,9 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
                 (maybeFilter ? 'when' + maybeFilter[1] + maybeFilter[2].raw + maybeFilter[3] : '') +
                 body.raw;
               var key = maybeKey ? maybeKey[2] : null;
-              var step = maybeStep ? maybeStep[2] : new CS.Int(1).r('1').g();
+              var step = maybeStep ? maybeStep[2] : gc(new CS.Int(1).r('1').g());
               var filter = maybeFilter ? maybeFilter[2] : null;
-              return new CS.ForIn(val, key, list, step, filter, body.block).r(raw).p(line, column, offset);
+              return gc(new CS.ForIn(val, key, list, step, filter, body.block).r(raw).p(line, column, offset));
             })(r1.offset, r1.line, r1.column, r4, r5, r6, r7, r9, r10, r11, r12, r13, r14);
         }
         if (r0 === null) {
@@ -11231,7 +11243,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
         if (r0 !== null) {
           r0 = (function(offset, line, column, ws, e, body) {
               var raw = 'switch' + ws + (e ? e.raw : '') + body.raw;
-              return new CS.Switch(e || null, body.cases, body['else'] || null).r(raw).p(line, column, offset);
+              return gc(new CS.Switch(e || null, body.cases, body['else'] || null).r(raw).p(line, column, offset));
             })(r1.offset, r1.line, r1.column, r4, r5, r6);
         }
         if (r0 === null) {
@@ -11532,7 +11544,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
         if (r0 !== null) {
           r0 = (function(offset, line, column, ws, conditions, body) {
                 var raw = 'when' + ws + conditions.raw + body.raw
-                return new CS.SwitchCase(conditions.list, body.block).r(raw).p(line, column, offset);
+                return gc(new CS.SwitchCase(conditions.list, body.block).r(raw).p(line, column, offset));
               })(r1.offset, r1.line, r1.column, r4, r5, r6);
         }
         if (r0 === null) {
@@ -11820,7 +11832,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
                 default: throw new Error('parsed function arrow ("' + arrow + '") not associated with a constructor');
               }
               params = params && params[2] && params[2].e ? params[2].e.list : [];
-              return new constructor(params, body.block).r(raw).p(line, column, offset);
+              return gc(new constructor(params, body.block).r(raw).p(line, column, offset));
             })(r1.offset, r1.line, r1.column, r3, r4, r5);
         }
         if (r0 === null) {
@@ -11964,7 +11976,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
         if (r0 !== null) {
           r0 = (function(offset, line, column, param, ws0, ws1, default_) {
                 var raw = param.raw + ws0 + '=' + ws1 + default_.raw;
-                return new CS.DefaultParam(param, default_).r(raw).p(line, column, offset);
+                return gc(new CS.DefaultParam(param, default_).r(raw).p(line, column, offset));
               })(r1.offset, r1.line, r1.column, r3, r4, r6, r7);
         }
         if (r0 === null) {
@@ -12017,7 +12029,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
         }
         if (r0 !== null) {
           r0 = (function(offset, line, column, a, rest) {
-                  return (rest ? new CS.Rest(a) : a).r(a.raw + rest).p(line, column, offset);
+                  return (rest ? gc(new CS.Rest(a)) : a).r(a.raw + rest).p(line, column, offset);
                 })(r1.offset, r1.line, r1.column, r3, r4);
         }
         if (r0 === null) {
@@ -12401,21 +12413,16 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
           return cachedResult.result;
         }
         
-        var r0, r1, r2, r3, r4, r5;
+        var r0, r1, r2, r3, r4;
         
         r1 = clone(pos);
         r2 = clone(pos);
-        r3 = parse_TERMINDENT();
+        r3 = parse__();
         if (r3 !== null) {
           r4 = parse_arrayLiteralMemberList();
+          r4 = r4 !== null ? r4 : "";
           if (r4 !== null) {
-            r5 = parse_DEDENT();
-            if (r5 !== null) {
-              r0 = [r3, r4, r5];
-            } else {
-              r0 = null;
-              pos = clone(r2);
-            }
+            r0 = [r3, r4];
           } else {
             r0 = null;
             pos = clone(r2);
@@ -12425,34 +12432,10 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
           pos = clone(r2);
         }
         if (r0 !== null) {
-          r0 = (function(offset, line, column, t, members, d) { return {list: members.list, raw: t + members.raw + d}; })(r1.offset, r1.line, r1.column, r3, r4, r5);
+          r0 = (function(offset, line, column, ws, members) { return {list: members ? members.list : [], raw: ws + members ? members.raw : ''}; })(r1.offset, r1.line, r1.column, r3, r4);
         }
         if (r0 === null) {
           pos = clone(r1);
-        }
-        if (r0 === null) {
-          r1 = clone(pos);
-          r2 = clone(pos);
-          r3 = parse__();
-          if (r3 !== null) {
-            r4 = parse_arrayLiteralMemberList();
-            r4 = r4 !== null ? r4 : "";
-            if (r4 !== null) {
-              r0 = [r3, r4];
-            } else {
-              r0 = null;
-              pos = clone(r2);
-            }
-          } else {
-            r0 = null;
-            pos = clone(r2);
-          }
-          if (r0 !== null) {
-            r0 = (function(offset, line, column, ws, members) { return {list: members ? members.list : [], raw: ws + members ? members.raw : ''}; })(r1.offset, r1.line, r1.column, r3, r4);
-          }
-          if (r0 === null) {
-            pos = clone(r1);
-          }
         }
         
         cache[cacheKey] = {
@@ -12470,79 +12453,163 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
           return cachedResult.result;
         }
         
-        var r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11;
+        var r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12;
         
         r1 = clone(pos);
         r2 = clone(pos);
-        r3 = parse_arrayLiteralMember();
-        if (r3 !== null) {
-          r4 = parse__();
-          if (r4 !== null) {
-            r5 = [];
-            r7 = clone(pos);
-            r8 = parse_arrayLiteralMemberSeparator();
-            if (r8 !== null) {
-              r9 = parse__();
-              if (r9 !== null) {
-                r10 = parse_arrayLiteralMember();
-                if (r10 !== null) {
-                  r11 = parse__();
-                  if (r11 !== null) {
-                    r6 = [r8, r9, r10, r11];
+        r5 = clone(pos);
+        r6 = clone(pos);
+        r7 = parse_TERMINATOR();
+        r7 = r7 !== null ? r7 : "";
+        if (r7 !== null) {
+          r8 = parse_INDENT();
+          if (r8 !== null) {
+            r9 = parse_arrayLiteralMembers();
+            if (r9 !== null) {
+              r10 = parse_DEDENT();
+              if (r10 !== null) {
+                r11 = parse__();
+                if (r11 !== null) {
+                  r12 = parse_arrayLiteralMemberSeparator();
+                  if (r12 !== null) {
+                    r4 = [r7, r8, r9, r10, r11, r12];
                   } else {
-                    r6 = null;
-                    pos = clone(r7);
+                    r4 = null;
+                    pos = clone(r6);
                   }
                 } else {
-                  r6 = null;
-                  pos = clone(r7);
+                  r4 = null;
+                  pos = clone(r6);
                 }
               } else {
-                r6 = null;
-                pos = clone(r7);
+                r4 = null;
+                pos = clone(r6);
               }
             } else {
-              r6 = null;
-              pos = clone(r7);
+              r4 = null;
+              pos = clone(r6);
             }
-            while (r6 !== null) {
-              r5.push(r6);
-              r7 = clone(pos);
-              r8 = parse_arrayLiteralMemberSeparator();
+          } else {
+            r4 = null;
+            pos = clone(r6);
+          }
+        } else {
+          r4 = null;
+          pos = clone(r6);
+        }
+        if (r4 !== null) {
+          r4 = (function(offset, line, column, a) { return a; })(r5.offset, r5.line, r5.column, r9);
+        }
+        if (r4 === null) {
+          pos = clone(r5);
+        }
+        if (r4 === null) {
+          r5 = clone(pos);
+          r6 = clone(pos);
+          r7 = parse__();
+          if (r7 !== null) {
+            r8 = parse_arrayLiteralMembers();
+            if (r8 !== null) {
+              r4 = [r7, r8];
+            } else {
+              r4 = null;
+              pos = clone(r6);
+            }
+          } else {
+            r4 = null;
+            pos = clone(r6);
+          }
+          if (r4 !== null) {
+            r4 = (function(offset, line, column, a) { return a; })(r5.offset, r5.line, r5.column, r8);
+          }
+          if (r4 === null) {
+            pos = clone(r5);
+          }
+        }
+        if (r4 !== null) {
+          r3 = [];
+          while (r4 !== null) {
+            r3.push(r4);
+            r5 = clone(pos);
+            r6 = clone(pos);
+            r7 = parse_TERMINATOR();
+            r7 = r7 !== null ? r7 : "";
+            if (r7 !== null) {
+              r8 = parse_INDENT();
               if (r8 !== null) {
-                r9 = parse__();
+                r9 = parse_arrayLiteralMembers();
                 if (r9 !== null) {
-                  r10 = parse_arrayLiteralMember();
+                  r10 = parse_DEDENT();
                   if (r10 !== null) {
                     r11 = parse__();
                     if (r11 !== null) {
-                      r6 = [r8, r9, r10, r11];
+                      r12 = parse_arrayLiteralMemberSeparator();
+                      if (r12 !== null) {
+                        r4 = [r7, r8, r9, r10, r11, r12];
+                      } else {
+                        r4 = null;
+                        pos = clone(r6);
+                      }
                     } else {
-                      r6 = null;
-                      pos = clone(r7);
+                      r4 = null;
+                      pos = clone(r6);
                     }
                   } else {
-                    r6 = null;
-                    pos = clone(r7);
+                    r4 = null;
+                    pos = clone(r6);
                   }
                 } else {
-                  r6 = null;
-                  pos = clone(r7);
+                  r4 = null;
+                  pos = clone(r6);
                 }
               } else {
-                r6 = null;
-                pos = clone(r7);
+                r4 = null;
+                pos = clone(r6);
+              }
+            } else {
+              r4 = null;
+              pos = clone(r6);
+            }
+            if (r4 !== null) {
+              r4 = (function(offset, line, column, a) { return a; })(r5.offset, r5.line, r5.column, r9);
+            }
+            if (r4 === null) {
+              pos = clone(r5);
+            }
+            if (r4 === null) {
+              r5 = clone(pos);
+              r6 = clone(pos);
+              r7 = parse__();
+              if (r7 !== null) {
+                r8 = parse_arrayLiteralMembers();
+                if (r8 !== null) {
+                  r4 = [r7, r8];
+                } else {
+                  r4 = null;
+                  pos = clone(r6);
+                }
+              } else {
+                r4 = null;
+                pos = clone(r6);
+              }
+              if (r4 !== null) {
+                r4 = (function(offset, line, column, a) { return a; })(r5.offset, r5.line, r5.column, r8);
+              }
+              if (r4 === null) {
+                pos = clone(r5);
               }
             }
+          }
+        } else {
+          r3 = null;
+        }
+        if (r3 !== null) {
+          r4 = parse__();
+          if (r4 !== null) {
+            r5 = parse_arrayLiteralMemberSeparator();
+            r5 = r5 !== null ? r5 : "";
             if (r5 !== null) {
-              r6 = parse_arrayLiteralMemberSeparator();
-              r6 = r6 !== null ? r6 : "";
-              if (r6 !== null) {
-                r0 = [r3, r4, r5, r6];
-              } else {
-                r0 = null;
-                pos = clone(r2);
-              }
+              r0 = [r3, r4, r5];
             } else {
               r0 = null;
               pos = clone(r2);
@@ -12556,10 +12623,304 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
           pos = clone(r2);
         }
         if (r0 !== null) {
-          r0 = (function(offset, line, column, e, ws, es, trail) {
-                var raw = e.raw + ws + es.map(function(e){ return e[0] + e[1] + e[2].raw + e[3]; }).join('') + trail;
-                return {list: [e].concat(es.map(function(e){ return e[2]; })), raw: raw};
-              })(r1.offset, r1.line, r1.column, r3, r4, r5, r6);
+          r0 = (function(offset, line, column, as) {
+                return {list: [].concat.apply([], as), raw: ''}
+              })(r1.offset, r1.line, r1.column, r3);
+        }
+        if (r0 === null) {
+          pos = clone(r1);
+        }
+        if (r0 === null) {
+          r1 = clone(pos);
+          r2 = clone(pos);
+          r3 = [];
+          r5 = clone(pos);
+          r6 = clone(pos);
+          r7 = parse_TERMINATOR();
+          r7 = r7 !== null ? r7 : "";
+          if (r7 !== null) {
+            r8 = parse_INDENT();
+            if (r8 !== null) {
+              r9 = parse_arrayLiteralMembers();
+              if (r9 !== null) {
+                r10 = parse_DEDENT();
+                if (r10 !== null) {
+                  r4 = [r7, r8, r9, r10];
+                } else {
+                  r4 = null;
+                  pos = clone(r6);
+                }
+              } else {
+                r4 = null;
+                pos = clone(r6);
+              }
+            } else {
+              r4 = null;
+              pos = clone(r6);
+            }
+          } else {
+            r4 = null;
+            pos = clone(r6);
+          }
+          if (r4 !== null) {
+            r4 = (function(offset, line, column, a) { return a; })(r5.offset, r5.line, r5.column, r9);
+          }
+          if (r4 === null) {
+            pos = clone(r5);
+          }
+          if (r4 === null) {
+            r5 = clone(pos);
+            r6 = clone(pos);
+            r7 = parse__();
+            if (r7 !== null) {
+              r8 = parse_arrayLiteralMembers();
+              if (r8 !== null) {
+                r4 = [r7, r8];
+              } else {
+                r4 = null;
+                pos = clone(r6);
+              }
+            } else {
+              r4 = null;
+              pos = clone(r6);
+            }
+            if (r4 !== null) {
+              r4 = (function(offset, line, column, a) { return a; })(r5.offset, r5.line, r5.column, r8);
+            }
+            if (r4 === null) {
+              pos = clone(r5);
+            }
+          }
+          while (r4 !== null) {
+            r3.push(r4);
+            r5 = clone(pos);
+            r6 = clone(pos);
+            r7 = parse_TERMINATOR();
+            r7 = r7 !== null ? r7 : "";
+            if (r7 !== null) {
+              r8 = parse_INDENT();
+              if (r8 !== null) {
+                r9 = parse_arrayLiteralMembers();
+                if (r9 !== null) {
+                  r10 = parse_DEDENT();
+                  if (r10 !== null) {
+                    r4 = [r7, r8, r9, r10];
+                  } else {
+                    r4 = null;
+                    pos = clone(r6);
+                  }
+                } else {
+                  r4 = null;
+                  pos = clone(r6);
+                }
+              } else {
+                r4 = null;
+                pos = clone(r6);
+              }
+            } else {
+              r4 = null;
+              pos = clone(r6);
+            }
+            if (r4 !== null) {
+              r4 = (function(offset, line, column, a) { return a; })(r5.offset, r5.line, r5.column, r9);
+            }
+            if (r4 === null) {
+              pos = clone(r5);
+            }
+            if (r4 === null) {
+              r5 = clone(pos);
+              r6 = clone(pos);
+              r7 = parse__();
+              if (r7 !== null) {
+                r8 = parse_arrayLiteralMembers();
+                if (r8 !== null) {
+                  r4 = [r7, r8];
+                } else {
+                  r4 = null;
+                  pos = clone(r6);
+                }
+              } else {
+                r4 = null;
+                pos = clone(r6);
+              }
+              if (r4 !== null) {
+                r4 = (function(offset, line, column, a) { return a; })(r5.offset, r5.line, r5.column, r8);
+              }
+              if (r4 === null) {
+                pos = clone(r5);
+              }
+            }
+          }
+          if (r3 !== null) {
+            r5 = clone(pos);
+            r6 = clone(pos);
+            r7 = parse_TERMINDENT();
+            if (r7 !== null) {
+              r8 = parse_arrayLiteralMembers();
+              if (r8 !== null) {
+                r9 = parse__();
+                if (r9 !== null) {
+                  r10 = parse_arrayLiteralMemberSeparator();
+                  r10 = r10 !== null ? r10 : "";
+                  if (r10 !== null) {
+                    r11 = parse_DEDENT();
+                    if (r11 !== null) {
+                      r4 = [r7, r8, r9, r10, r11];
+                    } else {
+                      r4 = null;
+                      pos = clone(r6);
+                    }
+                  } else {
+                    r4 = null;
+                    pos = clone(r6);
+                  }
+                } else {
+                  r4 = null;
+                  pos = clone(r6);
+                }
+              } else {
+                r4 = null;
+                pos = clone(r6);
+              }
+            } else {
+              r4 = null;
+              pos = clone(r6);
+            }
+            if (r4 !== null) {
+              r4 = (function(offset, line, column, a) { return a; })(r5.offset, r5.line, r5.column, r8);
+            }
+            if (r4 === null) {
+              pos = clone(r5);
+            }
+            if (r4 !== null) {
+              r0 = [r3, r4];
+            } else {
+              r0 = null;
+              pos = clone(r2);
+            }
+          } else {
+            r0 = null;
+            pos = clone(r2);
+          }
+          if (r0 !== null) {
+            r0 = (function(offset, line, column, as, ia) {
+                  return {list: [].concat.apply([], as.concat(ia)), raw: ''}
+                })(r1.offset, r1.line, r1.column, r3, r4);
+          }
+          if (r0 === null) {
+            pos = clone(r1);
+          }
+        }
+        
+        cache[cacheKey] = {
+          nextPos: clone(pos),
+          result:  r0
+        };
+        return r0;
+      }
+      
+      function parse_arrayLiteralMembers() {
+        var cacheKey = "arrayLiteralMembers@" + pos.offset;
+        var cachedResult = cache[cacheKey];
+        if (cachedResult) {
+          pos = clone(cachedResult.nextPos);
+          return cachedResult.result;
+        }
+        
+        var r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12;
+        
+        r1 = clone(pos);
+        r2 = clone(pos);
+        r3 = parse_arrayLiteralMember();
+        if (r3 !== null) {
+          r4 = parse__();
+          if (r4 !== null) {
+            r5 = [];
+            r7 = clone(pos);
+            r8 = clone(pos);
+            r9 = parse_arrayLiteralMemberSeparator();
+            if (r9 !== null) {
+              r10 = parse__();
+              if (r10 !== null) {
+                r11 = parse_arrayLiteralMember();
+                if (r11 !== null) {
+                  r12 = parse__();
+                  if (r12 !== null) {
+                    r6 = [r9, r10, r11, r12];
+                  } else {
+                    r6 = null;
+                    pos = clone(r8);
+                  }
+                } else {
+                  r6 = null;
+                  pos = clone(r8);
+                }
+              } else {
+                r6 = null;
+                pos = clone(r8);
+              }
+            } else {
+              r6 = null;
+              pos = clone(r8);
+            }
+            if (r6 !== null) {
+              r6 = (function(offset, line, column, m) { return m; })(r7.offset, r7.line, r7.column, r11);
+            }
+            if (r6 === null) {
+              pos = clone(r7);
+            }
+            while (r6 !== null) {
+              r5.push(r6);
+              r7 = clone(pos);
+              r8 = clone(pos);
+              r9 = parse_arrayLiteralMemberSeparator();
+              if (r9 !== null) {
+                r10 = parse__();
+                if (r10 !== null) {
+                  r11 = parse_arrayLiteralMember();
+                  if (r11 !== null) {
+                    r12 = parse__();
+                    if (r12 !== null) {
+                      r6 = [r9, r10, r11, r12];
+                    } else {
+                      r6 = null;
+                      pos = clone(r8);
+                    }
+                  } else {
+                    r6 = null;
+                    pos = clone(r8);
+                  }
+                } else {
+                  r6 = null;
+                  pos = clone(r8);
+                }
+              } else {
+                r6 = null;
+                pos = clone(r8);
+              }
+              if (r6 !== null) {
+                r6 = (function(offset, line, column, m) { return m; })(r7.offset, r7.line, r7.column, r11);
+              }
+              if (r6 === null) {
+                pos = clone(r7);
+              }
+            }
+            if (r5 !== null) {
+              r0 = [r3, r4, r5];
+            } else {
+              r0 = null;
+              pos = clone(r2);
+            }
+          } else {
+            r0 = null;
+            pos = clone(r2);
+          }
+        } else {
+          r0 = null;
+          pos = clone(r2);
+        }
+        if (r0 !== null) {
+          r0 = (function(offset, line, column, e, es) { return [e].concat(es); })(r1.offset, r1.line, r1.column, r3, r5);
         }
         if (r0 === null) {
           pos = clone(r1);
@@ -12580,40 +12941,11 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
           return cachedResult.result;
         }
         
-        var r0, r1, r2, r3, r4, r5;
+        var r0;
         
         r0 = parse_spread();
         if (r0 === null) {
           r0 = parse_expression();
-          if (r0 === null) {
-            r1 = clone(pos);
-            r2 = clone(pos);
-            r3 = parse_TERMINDENT();
-            if (r3 !== null) {
-              r4 = parse_implicitObjectLiteral();
-              if (r4 !== null) {
-                r5 = parse_DEDENT();
-                if (r5 !== null) {
-                  r0 = [r3, r4, r5];
-                } else {
-                  r0 = null;
-                  pos = clone(r2);
-                }
-              } else {
-                r0 = null;
-                pos = clone(r2);
-              }
-            } else {
-              r0 = null;
-              pos = clone(r2);
-            }
-            if (r0 !== null) {
-              r0 = (function(offset, line, column, o) { return o; })(r1.offset, r1.line, r1.column, r4);
-            }
-            if (r0 === null) {
-              pos = clone(r1);
-            }
-          }
         }
         
         cache[cacheKey] = {
@@ -13044,7 +13376,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
           r0 = parse_contextVar();
           if (r0 !== null) {
             r0 = (function(offset, line, column, v) {
-                  var key = new CS.String(v.memberName).r(v.memberName).p(line, column + 1)
+                  var key = new CS.String(v.memberName).r(v.memberName).p(line, column + 1);
                   return new CS.ObjectInitialiserMember(key, v).r(v.raw).p(line, column, offset);
                 })(r1.offset, r1.line, r1.column, r0);
           }
@@ -13118,7 +13450,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
         r0 = parse_implicitObjectLiteralMemberList();
         if (r0 !== null) {
           r0 = (function(offset, line, column, members) {
-            return new CS.ObjectInitialiser(members.list).r(members.raw).p(line, column, offset);
+            return gc(new CS.ObjectInitialiser(members.list).r(members.raw).p(line, column, offset));
           })(r1.offset, r1.line, r1.column, r0);
         }
         if (r0 === null) {
@@ -13370,7 +13702,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
         }
         if (r0 !== null) {
           r0 = (function(offset, line, column, key, ws0, ws1, val) {
-                return new CS.ObjectInitialiserMember(key, val.value).r(key.raw + ws0 + ':' + ws1 + val.raw).p(line, column, offset);
+                return gc(new CS.ObjectInitialiserMember(key, val.value).r(key.raw + ws0 + ':' + ws1 + val.raw).p(line, column, offset));
               })(r1.offset, r1.line, r1.column, r3, r4, r6, r7);
         }
         if (r0 === null) {
@@ -13782,6 +14114,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
         r1 = clone(pos);
         r2 = clone(pos);
         r3 = parse_integer();
+        r3 = r3 !== null ? r3 : "";
         if (r3 !== null) {
           r5 = clone(pos);
           if (input.charCodeAt(pos.offset) === 46) {
@@ -13814,7 +14147,6 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
             r4 = null;
             pos = clone(r5);
           }
-          r4 = r4 !== null ? r4 : "";
           if (r4 !== null) {
             r0 = [r3, r4];
           } else {
@@ -13827,14 +14159,24 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
         }
         if (r0 !== null) {
           r0 = (function(offset, line, column, integral, fractional) {
-              if(fractional) fractional = "." + fractional[1].join('');
-              return fractional
-                ? new CS.Float(parseFloat(integral + fractional, 10)).r(integral + fractional).p(line, column, offset)
-                : new CS.Int(+integral).r(integral).p(line, column, offset);
+              fractional = "." + fractional[1].join('');
+              return new CS.Float(parseFloat((integral || 0) + fractional, 10)).r((integral || '') + fractional).p(line, column, offset);
             })(r1.offset, r1.line, r1.column, r3, r4);
         }
         if (r0 === null) {
           pos = clone(r1);
+        }
+        if (r0 === null) {
+          r1 = clone(pos);
+          r0 = parse_integer();
+          if (r0 !== null) {
+            r0 = (function(offset, line, column, integral) {
+                return new CS.Int(+integral).r(integral).p(line, column, offset);
+              })(r1.offset, r1.line, r1.column, r0);
+          }
+          if (r0 === null) {
+            pos = clone(r1);
+          }
         }
         
         cache[cacheKey] = {
@@ -14037,6 +14379,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
           }
         }
         if (r3 !== null) {
+          r4 = [];
           r5 = parse_stringData();
           if (r5 === null) {
             if (input.charCodeAt(pos.offset) === 39) {
@@ -14112,69 +14455,63 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
               }
             }
           }
-          if (r5 !== null) {
-            r4 = [];
-            while (r5 !== null) {
-              r4.push(r5);
-              r5 = parse_stringData();
+          while (r5 !== null) {
+            r4.push(r5);
+            r5 = parse_stringData();
+            if (r5 === null) {
+              if (input.charCodeAt(pos.offset) === 39) {
+                r5 = "'";
+                advance(pos, 1);
+              } else {
+                r5 = null;
+                if (reportFailures === 0) {
+                  matchFailed("\"'\"");
+                }
+              }
               if (r5 === null) {
-                if (input.charCodeAt(pos.offset) === 39) {
-                  r5 = "'";
+                r6 = clone(pos);
+                r7 = clone(pos);
+                if (input.charCodeAt(pos.offset) === 34) {
+                  r8 = "\"";
                   advance(pos, 1);
                 } else {
-                  r5 = null;
+                  r8 = null;
                   if (reportFailures === 0) {
-                    matchFailed("\"'\"");
+                    matchFailed("\"\\\"\"");
                   }
                 }
-                if (r5 === null) {
-                  r6 = clone(pos);
-                  r7 = clone(pos);
+                if (r8 !== null) {
                   if (input.charCodeAt(pos.offset) === 34) {
-                    r8 = "\"";
+                    r9 = "\"";
                     advance(pos, 1);
                   } else {
-                    r8 = null;
+                    r9 = null;
                     if (reportFailures === 0) {
                       matchFailed("\"\\\"\"");
                     }
                   }
-                  if (r8 !== null) {
+                  r9 = r9 !== null ? r9 : "";
+                  if (r9 !== null) {
+                    r11 = clone(pos);
+                    reportFailures++;
                     if (input.charCodeAt(pos.offset) === 34) {
-                      r9 = "\"";
+                      r10 = "\"";
                       advance(pos, 1);
                     } else {
-                      r9 = null;
+                      r10 = null;
                       if (reportFailures === 0) {
                         matchFailed("\"\\\"\"");
                       }
                     }
-                    r9 = r9 !== null ? r9 : "";
-                    if (r9 !== null) {
-                      r11 = clone(pos);
-                      reportFailures++;
-                      if (input.charCodeAt(pos.offset) === 34) {
-                        r10 = "\"";
-                        advance(pos, 1);
-                      } else {
-                        r10 = null;
-                        if (reportFailures === 0) {
-                          matchFailed("\"\\\"\"");
-                        }
-                      }
-                      reportFailures--;
-                      if (r10 === null) {
-                        r10 = "";
-                      } else {
-                        r10 = null;
-                        pos = clone(r11);
-                      }
-                      if (r10 !== null) {
-                        r5 = [r8, r9, r10];
-                      } else {
-                        r5 = null;
-                        pos = clone(r7);
-                      }
+                    reportFailures--;
+                    if (r10 === null) {
+                      r10 = "";
+                    } else {
+                      r10 = null;
+                      pos = clone(r11);
+                    }
+                    if (r10 !== null) {
+                      r5 = [r8, r9, r10];
                     } else {
                       r5 = null;
                       pos = clone(r7);
@@ -14183,17 +14520,18 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
                     r5 = null;
                     pos = clone(r7);
                   }
-                  if (r5 !== null) {
-                    r5 = (function(offset, line, column, s) { return s.join(''); })(r6.offset, r6.line, r6.column, r5);
-                  }
-                  if (r5 === null) {
-                    pos = clone(r6);
-                  }
+                } else {
+                  r5 = null;
+                  pos = clone(r7);
+                }
+                if (r5 !== null) {
+                  r5 = (function(offset, line, column, s) { return s.join(''); })(r6.offset, r6.line, r6.column, r5);
+                }
+                if (r5 === null) {
+                  pos = clone(r6);
                 }
               }
             }
-          } else {
-            r4 = null;
           }
           if (r4 !== null) {
             if (input.substr(pos.offset, 3) === "\"\"\"") {
@@ -14241,6 +14579,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
             }
           }
           if (r3 !== null) {
+            r4 = [];
             r5 = parse_stringData();
             if (r5 === null) {
               if (input.charCodeAt(pos.offset) === 34) {
@@ -14327,79 +14666,73 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
                 }
               }
             }
-            if (r5 !== null) {
-              r4 = [];
-              while (r5 !== null) {
-                r4.push(r5);
-                r5 = parse_stringData();
+            while (r5 !== null) {
+              r4.push(r5);
+              r5 = parse_stringData();
+              if (r5 === null) {
+                if (input.charCodeAt(pos.offset) === 34) {
+                  r5 = "\"";
+                  advance(pos, 1);
+                } else {
+                  r5 = null;
+                  if (reportFailures === 0) {
+                    matchFailed("\"\\\"\"");
+                  }
+                }
                 if (r5 === null) {
-                  if (input.charCodeAt(pos.offset) === 34) {
-                    r5 = "\"";
+                  if (input.charCodeAt(pos.offset) === 35) {
+                    r5 = "#";
                     advance(pos, 1);
                   } else {
                     r5 = null;
                     if (reportFailures === 0) {
-                      matchFailed("\"\\\"\"");
+                      matchFailed("\"#\"");
                     }
                   }
                   if (r5 === null) {
-                    if (input.charCodeAt(pos.offset) === 35) {
-                      r5 = "#";
+                    r6 = clone(pos);
+                    r7 = clone(pos);
+                    if (input.charCodeAt(pos.offset) === 39) {
+                      r8 = "'";
                       advance(pos, 1);
                     } else {
-                      r5 = null;
+                      r8 = null;
                       if (reportFailures === 0) {
-                        matchFailed("\"#\"");
+                        matchFailed("\"'\"");
                       }
                     }
-                    if (r5 === null) {
-                      r6 = clone(pos);
-                      r7 = clone(pos);
+                    if (r8 !== null) {
                       if (input.charCodeAt(pos.offset) === 39) {
-                        r8 = "'";
+                        r9 = "'";
                         advance(pos, 1);
                       } else {
-                        r8 = null;
+                        r9 = null;
                         if (reportFailures === 0) {
                           matchFailed("\"'\"");
                         }
                       }
-                      if (r8 !== null) {
+                      r9 = r9 !== null ? r9 : "";
+                      if (r9 !== null) {
+                        r11 = clone(pos);
+                        reportFailures++;
                         if (input.charCodeAt(pos.offset) === 39) {
-                          r9 = "'";
+                          r10 = "'";
                           advance(pos, 1);
                         } else {
-                          r9 = null;
+                          r10 = null;
                           if (reportFailures === 0) {
                             matchFailed("\"'\"");
                           }
                         }
-                        r9 = r9 !== null ? r9 : "";
-                        if (r9 !== null) {
-                          r11 = clone(pos);
-                          reportFailures++;
-                          if (input.charCodeAt(pos.offset) === 39) {
-                            r10 = "'";
-                            advance(pos, 1);
-                          } else {
-                            r10 = null;
-                            if (reportFailures === 0) {
-                              matchFailed("\"'\"");
-                            }
-                          }
-                          reportFailures--;
-                          if (r10 === null) {
-                            r10 = "";
-                          } else {
-                            r10 = null;
-                            pos = clone(r11);
-                          }
-                          if (r10 !== null) {
-                            r5 = [r8, r9, r10];
-                          } else {
-                            r5 = null;
-                            pos = clone(r7);
-                          }
+                        reportFailures--;
+                        if (r10 === null) {
+                          r10 = "";
+                        } else {
+                          r10 = null;
+                          pos = clone(r11);
+                        }
+                        if (r10 !== null) {
+                          r5 = [r8, r9, r10];
                         } else {
                           r5 = null;
                           pos = clone(r7);
@@ -14408,18 +14741,19 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
                         r5 = null;
                         pos = clone(r7);
                       }
-                      if (r5 !== null) {
-                        r5 = (function(offset, line, column, s) { return s.join(''); })(r6.offset, r6.line, r6.column, r5);
-                      }
-                      if (r5 === null) {
-                        pos = clone(r6);
-                      }
+                    } else {
+                      r5 = null;
+                      pos = clone(r7);
+                    }
+                    if (r5 !== null) {
+                      r5 = (function(offset, line, column, s) { return s.join(''); })(r6.offset, r6.line, r6.column, r5);
+                    }
+                    if (r5 === null) {
+                      pos = clone(r6);
                     }
                   }
                 }
               }
-            } else {
-              r4 = null;
             }
             if (r4 !== null) {
               if (input.substr(pos.offset, 3) === "'''") {
@@ -14637,15 +14971,45 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
           return cachedResult.result;
         }
         
+        var r0;
+        
+        r0 = parse_stringLineData();
+        if (r0 === null) {
+          if (input.charCodeAt(pos.offset) === 10) {
+            r0 = "\n";
+            advance(pos, 1);
+          } else {
+            r0 = null;
+            if (reportFailures === 0) {
+              matchFailed("\"\\n\"");
+            }
+          }
+        }
+        
+        cache[cacheKey] = {
+          nextPos: clone(pos),
+          result:  r0
+        };
+        return r0;
+      }
+      
+      function parse_stringLineData() {
+        var cacheKey = "stringLineData@" + pos.offset;
+        var cachedResult = cache[cacheKey];
+        if (cachedResult) {
+          pos = clone(cachedResult.nextPos);
+          return cachedResult.result;
+        }
+        
         var r0, r1, r2, r3, r4, r5;
         
-        if (/^[^"'\\#]/.test(input.charAt(pos.offset))) {
+        if (/^[^"'\\#\n]/.test(input.charAt(pos.offset))) {
           r0 = input.charAt(pos.offset);
           advance(pos, 1);
         } else {
           r0 = null;
           if (reportFailures === 0) {
-            matchFailed("[^\"'\\\\#]");
+            matchFailed("[^\"'\\\\#\\n]");
           }
         }
         if (r0 === null) {
@@ -14979,7 +15343,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
           return cachedResult.result;
         }
         
-        var r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12, r13;
+        var r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11, r12;
         
         r1 = clone(pos);
         r2 = clone(pos);
@@ -14993,457 +15357,117 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
           }
         }
         if (r3 !== null) {
+          r5 = clone(pos);
           r6 = clone(pos);
-          r7 = parse_stringData();
-          if (r7 === null) {
-            if (input.charCodeAt(pos.offset) === 39) {
-              r7 = "'";
+          r7 = [];
+          r9 = clone(pos);
+          r10 = clone(pos);
+          r11 = [];
+          r12 = parse_interpolationPart();
+          while (r12 !== null) {
+            r11.push(r12);
+            r12 = parse_interpolationPart();
+          }
+          if (r11 !== null) {
+            if (input.charCodeAt(pos.offset) === 10) {
+              r12 = "\n";
               advance(pos, 1);
             } else {
-              r7 = null;
+              r12 = null;
               if (reportFailures === 0) {
-                matchFailed("\"'\"");
+                matchFailed("\"\\n\"");
               }
             }
-            if (r7 === null) {
-              r8 = clone(pos);
-              r9 = clone(pos);
-              if (input.charCodeAt(pos.offset) === 34) {
-                r10 = "\"";
+            if (r12 !== null) {
+              r8 = [r11, r12];
+            } else {
+              r8 = null;
+              pos = clone(r10);
+            }
+          } else {
+            r8 = null;
+            pos = clone(r10);
+          }
+          if (r8 !== null) {
+            r8 = (function(offset, line, column, i) { return i; })(r9.offset, r9.line, r9.column, r11);
+          }
+          if (r8 === null) {
+            pos = clone(r9);
+          }
+          while (r8 !== null) {
+            r7.push(r8);
+            r9 = clone(pos);
+            r10 = clone(pos);
+            r11 = [];
+            r12 = parse_interpolationPart();
+            while (r12 !== null) {
+              r11.push(r12);
+              r12 = parse_interpolationPart();
+            }
+            if (r11 !== null) {
+              if (input.charCodeAt(pos.offset) === 10) {
+                r12 = "\n";
                 advance(pos, 1);
               } else {
-                r10 = null;
+                r12 = null;
                 if (reportFailures === 0) {
-                  matchFailed("\"\\\"\"");
+                  matchFailed("\"\\n\"");
                 }
               }
-              if (r10 !== null) {
-                if (input.charCodeAt(pos.offset) === 34) {
-                  r11 = "\"";
-                  advance(pos, 1);
-                } else {
-                  r11 = null;
-                  if (reportFailures === 0) {
-                    matchFailed("\"\\\"\"");
-                  }
-                }
-                r11 = r11 !== null ? r11 : "";
-                if (r11 !== null) {
-                  r13 = clone(pos);
-                  reportFailures++;
-                  if (input.charCodeAt(pos.offset) === 34) {
-                    r12 = "\"";
-                    advance(pos, 1);
-                  } else {
-                    r12 = null;
-                    if (reportFailures === 0) {
-                      matchFailed("\"\\\"\"");
-                    }
-                  }
-                  reportFailures--;
-                  if (r12 === null) {
-                    r12 = "";
-                  } else {
-                    r12 = null;
-                    pos = clone(r13);
-                  }
-                  if (r12 !== null) {
-                    r7 = [r10, r11, r12];
-                  } else {
-                    r7 = null;
-                    pos = clone(r9);
-                  }
-                } else {
-                  r7 = null;
-                  pos = clone(r9);
-                }
+              if (r12 !== null) {
+                r8 = [r11, r12];
               } else {
-                r7 = null;
-                pos = clone(r9);
+                r8 = null;
+                pos = clone(r10);
               }
-              if (r7 !== null) {
-                r7 = (function(offset, line, column, s) { return s.join(''); })(r8.offset, r8.line, r8.column, r7);
-              }
-              if (r7 === null) {
-                pos = clone(r8);
-              }
+            } else {
+              r8 = null;
+              pos = clone(r10);
+            }
+            if (r8 !== null) {
+              r8 = (function(offset, line, column, i) { return i; })(r9.offset, r9.line, r9.column, r11);
+            }
+            if (r8 === null) {
+              pos = clone(r9);
             }
           }
           if (r7 !== null) {
-            r5 = [];
-            while (r7 !== null) {
-              r5.push(r7);
-              r7 = parse_stringData();
-              if (r7 === null) {
-                if (input.charCodeAt(pos.offset) === 39) {
-                  r7 = "'";
-                  advance(pos, 1);
-                } else {
-                  r7 = null;
-                  if (reportFailures === 0) {
-                    matchFailed("\"'\"");
-                  }
-                }
-                if (r7 === null) {
-                  r8 = clone(pos);
-                  r9 = clone(pos);
-                  if (input.charCodeAt(pos.offset) === 34) {
-                    r10 = "\"";
-                    advance(pos, 1);
-                  } else {
-                    r10 = null;
-                    if (reportFailures === 0) {
-                      matchFailed("\"\\\"\"");
-                    }
-                  }
-                  if (r10 !== null) {
-                    if (input.charCodeAt(pos.offset) === 34) {
-                      r11 = "\"";
-                      advance(pos, 1);
-                    } else {
-                      r11 = null;
-                      if (reportFailures === 0) {
-                        matchFailed("\"\\\"\"");
-                      }
-                    }
-                    r11 = r11 !== null ? r11 : "";
-                    if (r11 !== null) {
-                      r13 = clone(pos);
-                      reportFailures++;
-                      if (input.charCodeAt(pos.offset) === 34) {
-                        r12 = "\"";
-                        advance(pos, 1);
-                      } else {
-                        r12 = null;
-                        if (reportFailures === 0) {
-                          matchFailed("\"\\\"\"");
-                        }
-                      }
-                      reportFailures--;
-                      if (r12 === null) {
-                        r12 = "";
-                      } else {
-                        r12 = null;
-                        pos = clone(r13);
-                      }
-                      if (r12 !== null) {
-                        r7 = [r10, r11, r12];
-                      } else {
-                        r7 = null;
-                        pos = clone(r9);
-                      }
-                    } else {
-                      r7 = null;
-                      pos = clone(r9);
-                    }
-                  } else {
-                    r7 = null;
-                    pos = clone(r9);
-                  }
-                  if (r7 !== null) {
-                    r7 = (function(offset, line, column, s) { return s.join(''); })(r8.offset, r8.line, r8.column, r7);
-                  }
-                  if (r7 === null) {
-                    pos = clone(r8);
-                  }
-                }
-              }
-            }
-          } else {
-            r5 = null;
-          }
-          if (r5 !== null) {
-            r5 = (function(offset, line, column, d) { return new CS.String(d.join('')).p(line, column, offset); })(r6.offset, r6.line, r6.column, r5);
-          }
-          if (r5 === null) {
-            pos = clone(r6);
-          }
-          if (r5 === null) {
-            r6 = clone(pos);
-            r7 = clone(pos);
-            if (input.substr(pos.offset, 2) === "#{") {
-              r8 = "#{";
-              advance(pos, 2);
-            } else {
-              r8 = null;
-              if (reportFailures === 0) {
-                matchFailed("\"#{\"");
-              }
+            r8 = [];
+            r9 = parse_interpolationPart();
+            while (r9 !== null) {
+              r8.push(r9);
+              r9 = parse_interpolationPart();
             }
             if (r8 !== null) {
-              r9 = parse__();
+              if (input.charCodeAt(pos.offset) === 10) {
+                r9 = "\n";
+                advance(pos, 1);
+              } else {
+                r9 = null;
+                if (reportFailures === 0) {
+                  matchFailed("\"\\n\"");
+                }
+              }
+              r9 = r9 !== null ? r9 : "";
               if (r9 !== null) {
-                r10 = parse_expression();
-                if (r10 !== null) {
-                  r11 = parse__();
-                  if (r11 !== null) {
-                    if (input.charCodeAt(pos.offset) === 125) {
-                      r12 = "}";
-                      advance(pos, 1);
-                    } else {
-                      r12 = null;
-                      if (reportFailures === 0) {
-                        matchFailed("\"}\"");
-                      }
-                    }
-                    if (r12 !== null) {
-                      r5 = [r8, r9, r10, r11, r12];
-                    } else {
-                      r5 = null;
-                      pos = clone(r7);
-                    }
-                  } else {
-                    r5 = null;
-                    pos = clone(r7);
-                  }
-                } else {
-                  r5 = null;
-                  pos = clone(r7);
-                }
+                r4 = [r7, r8, r9];
               } else {
-                r5 = null;
-                pos = clone(r7);
-              }
-            } else {
-              r5 = null;
-              pos = clone(r7);
-            }
-            if (r5 !== null) {
-              r5 = (function(offset, line, column, e) { return e; })(r6.offset, r6.line, r6.column, r10);
-            }
-            if (r5 === null) {
-              pos = clone(r6);
-            }
-          }
-          if (r5 !== null) {
-            r4 = [];
-            while (r5 !== null) {
-              r4.push(r5);
-              r6 = clone(pos);
-              r7 = parse_stringData();
-              if (r7 === null) {
-                if (input.charCodeAt(pos.offset) === 39) {
-                  r7 = "'";
-                  advance(pos, 1);
-                } else {
-                  r7 = null;
-                  if (reportFailures === 0) {
-                    matchFailed("\"'\"");
-                  }
-                }
-                if (r7 === null) {
-                  r8 = clone(pos);
-                  r9 = clone(pos);
-                  if (input.charCodeAt(pos.offset) === 34) {
-                    r10 = "\"";
-                    advance(pos, 1);
-                  } else {
-                    r10 = null;
-                    if (reportFailures === 0) {
-                      matchFailed("\"\\\"\"");
-                    }
-                  }
-                  if (r10 !== null) {
-                    if (input.charCodeAt(pos.offset) === 34) {
-                      r11 = "\"";
-                      advance(pos, 1);
-                    } else {
-                      r11 = null;
-                      if (reportFailures === 0) {
-                        matchFailed("\"\\\"\"");
-                      }
-                    }
-                    r11 = r11 !== null ? r11 : "";
-                    if (r11 !== null) {
-                      r13 = clone(pos);
-                      reportFailures++;
-                      if (input.charCodeAt(pos.offset) === 34) {
-                        r12 = "\"";
-                        advance(pos, 1);
-                      } else {
-                        r12 = null;
-                        if (reportFailures === 0) {
-                          matchFailed("\"\\\"\"");
-                        }
-                      }
-                      reportFailures--;
-                      if (r12 === null) {
-                        r12 = "";
-                      } else {
-                        r12 = null;
-                        pos = clone(r13);
-                      }
-                      if (r12 !== null) {
-                        r7 = [r10, r11, r12];
-                      } else {
-                        r7 = null;
-                        pos = clone(r9);
-                      }
-                    } else {
-                      r7 = null;
-                      pos = clone(r9);
-                    }
-                  } else {
-                    r7 = null;
-                    pos = clone(r9);
-                  }
-                  if (r7 !== null) {
-                    r7 = (function(offset, line, column, s) { return s.join(''); })(r8.offset, r8.line, r8.column, r7);
-                  }
-                  if (r7 === null) {
-                    pos = clone(r8);
-                  }
-                }
-              }
-              if (r7 !== null) {
-                r5 = [];
-                while (r7 !== null) {
-                  r5.push(r7);
-                  r7 = parse_stringData();
-                  if (r7 === null) {
-                    if (input.charCodeAt(pos.offset) === 39) {
-                      r7 = "'";
-                      advance(pos, 1);
-                    } else {
-                      r7 = null;
-                      if (reportFailures === 0) {
-                        matchFailed("\"'\"");
-                      }
-                    }
-                    if (r7 === null) {
-                      r8 = clone(pos);
-                      r9 = clone(pos);
-                      if (input.charCodeAt(pos.offset) === 34) {
-                        r10 = "\"";
-                        advance(pos, 1);
-                      } else {
-                        r10 = null;
-                        if (reportFailures === 0) {
-                          matchFailed("\"\\\"\"");
-                        }
-                      }
-                      if (r10 !== null) {
-                        if (input.charCodeAt(pos.offset) === 34) {
-                          r11 = "\"";
-                          advance(pos, 1);
-                        } else {
-                          r11 = null;
-                          if (reportFailures === 0) {
-                            matchFailed("\"\\\"\"");
-                          }
-                        }
-                        r11 = r11 !== null ? r11 : "";
-                        if (r11 !== null) {
-                          r13 = clone(pos);
-                          reportFailures++;
-                          if (input.charCodeAt(pos.offset) === 34) {
-                            r12 = "\"";
-                            advance(pos, 1);
-                          } else {
-                            r12 = null;
-                            if (reportFailures === 0) {
-                              matchFailed("\"\\\"\"");
-                            }
-                          }
-                          reportFailures--;
-                          if (r12 === null) {
-                            r12 = "";
-                          } else {
-                            r12 = null;
-                            pos = clone(r13);
-                          }
-                          if (r12 !== null) {
-                            r7 = [r10, r11, r12];
-                          } else {
-                            r7 = null;
-                            pos = clone(r9);
-                          }
-                        } else {
-                          r7 = null;
-                          pos = clone(r9);
-                        }
-                      } else {
-                        r7 = null;
-                        pos = clone(r9);
-                      }
-                      if (r7 !== null) {
-                        r7 = (function(offset, line, column, s) { return s.join(''); })(r8.offset, r8.line, r8.column, r7);
-                      }
-                      if (r7 === null) {
-                        pos = clone(r8);
-                      }
-                    }
-                  }
-                }
-              } else {
-                r5 = null;
-              }
-              if (r5 !== null) {
-                r5 = (function(offset, line, column, d) { return new CS.String(d.join('')).p(line, column, offset); })(r6.offset, r6.line, r6.column, r5);
-              }
-              if (r5 === null) {
+                r4 = null;
                 pos = clone(r6);
               }
-              if (r5 === null) {
-                r6 = clone(pos);
-                r7 = clone(pos);
-                if (input.substr(pos.offset, 2) === "#{") {
-                  r8 = "#{";
-                  advance(pos, 2);
-                } else {
-                  r8 = null;
-                  if (reportFailures === 0) {
-                    matchFailed("\"#{\"");
-                  }
-                }
-                if (r8 !== null) {
-                  r9 = parse__();
-                  if (r9 !== null) {
-                    r10 = parse_expression();
-                    if (r10 !== null) {
-                      r11 = parse__();
-                      if (r11 !== null) {
-                        if (input.charCodeAt(pos.offset) === 125) {
-                          r12 = "}";
-                          advance(pos, 1);
-                        } else {
-                          r12 = null;
-                          if (reportFailures === 0) {
-                            matchFailed("\"}\"");
-                          }
-                        }
-                        if (r12 !== null) {
-                          r5 = [r8, r9, r10, r11, r12];
-                        } else {
-                          r5 = null;
-                          pos = clone(r7);
-                        }
-                      } else {
-                        r5 = null;
-                        pos = clone(r7);
-                      }
-                    } else {
-                      r5 = null;
-                      pos = clone(r7);
-                    }
-                  } else {
-                    r5 = null;
-                    pos = clone(r7);
-                  }
-                } else {
-                  r5 = null;
-                  pos = clone(r7);
-                }
-                if (r5 !== null) {
-                  r5 = (function(offset, line, column, e) { return e; })(r6.offset, r6.line, r6.column, r10);
-                }
-                if (r5 === null) {
-                  pos = clone(r6);
-                }
-              }
+            } else {
+              r4 = null;
+              pos = clone(r6);
             }
           } else {
             r4 = null;
+            pos = clone(r6);
+          }
+          if (r4 !== null) {
+            r4 = (function(offset, line, column, init, last) { return init.concat([last]); })(r5.offset, r5.line, r5.column, r7, r8);
+          }
+          if (r4 === null) {
+            pos = clone(r5);
           }
           if (r4 !== null) {
             if (input.substr(pos.offset, 3) === "\"\"\"") {
@@ -15470,7 +15494,58 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
           pos = clone(r2);
         }
         if (r0 !== null) {
-          r0 = (function(offset, line, column, es) {
+          r0 = (function(offset, line, column, lines) {
+              var i, len, lastLine, dent, ldent;
+              // remove starting newlines
+              while (!lines[0].length) {
+                lines.shift();
+                if (!lines[0]) {
+                  return new CS.String('').p(line, column, offset);
+                }
+              }
+              // remove ending newlines
+              i = lines.length - 1;
+              while (i >= 0 && !lines[i--].length) {
+                lines.pop();
+              }
+              // remove ending whitespace
+              len = lines.length;
+              lastLine = lines[len - 1];
+              if (lastLine[lastLine.length - 1].className === "String") {
+                lines[len - 1][lastLine.length - 1].data  = lines[len - 1][lastLine.length - 1].data.replace(/\s+$/, '');
+              }
+              // find common indent
+              i = 0;
+              dent = 9e9;
+              len = lines.length - 1; // skip the last one as it's empty
+              while (i < len) {
+                if (lines[i][0].className === "String") {
+                  ldent = /([^\S]*)/.exec(lines[i][0].data)[1].length;
+                  if (ldent < dent) {
+                    dent = ldent
+                  }
+                } else {
+                  dent = 0;
+                }
+                if (!dent) {
+                  break;
+                }
+                ++i;
+              }
+              // slice away common indent, re-add newline
+              if (dent > 0) {
+                i = 0;
+                while (i < len) {
+                  lines[i][0].data = lines[i][0].data.slice(dent);
+                  // don't add a newline to the end
+                  if (i < len - 1) {
+                    lines[i].push(new CS.String('\n'));
+                  }
+                  ++i;
+                }
+              }
+              // concat lines and create interpolation
+              var es = [].concat.apply([], lines);
               return createInterpolation(es).p(line, column, offset);
             })(r1.offset, r1.line, r1.column, r4);
         }
@@ -15718,6 +15793,246 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
             r0 = (function(offset, line, column, es) {
                 return createInterpolation(es).p(line, column, offset);
               })(r1.offset, r1.line, r1.column, r4);
+          }
+          if (r0 === null) {
+            pos = clone(r1);
+          }
+        }
+        
+        cache[cacheKey] = {
+          nextPos: clone(pos),
+          result:  r0
+        };
+        return r0;
+      }
+      
+      function parse_interpolationPart() {
+        var cacheKey = "interpolationPart@" + pos.offset;
+        var cachedResult = cache[cacheKey];
+        if (cachedResult) {
+          pos = clone(cachedResult.nextPos);
+          return cachedResult.result;
+        }
+        
+        var r0, r1, r2, r3, r4, r5, r6, r7, r8;
+        
+        r1 = clone(pos);
+        r2 = parse_stringLineData();
+        if (r2 === null) {
+          if (input.charCodeAt(pos.offset) === 39) {
+            r2 = "'";
+            advance(pos, 1);
+          } else {
+            r2 = null;
+            if (reportFailures === 0) {
+              matchFailed("\"'\"");
+            }
+          }
+          if (r2 === null) {
+            r3 = clone(pos);
+            r4 = clone(pos);
+            if (input.charCodeAt(pos.offset) === 34) {
+              r5 = "\"";
+              advance(pos, 1);
+            } else {
+              r5 = null;
+              if (reportFailures === 0) {
+                matchFailed("\"\\\"\"");
+              }
+            }
+            if (r5 !== null) {
+              if (input.charCodeAt(pos.offset) === 34) {
+                r6 = "\"";
+                advance(pos, 1);
+              } else {
+                r6 = null;
+                if (reportFailures === 0) {
+                  matchFailed("\"\\\"\"");
+                }
+              }
+              r6 = r6 !== null ? r6 : "";
+              if (r6 !== null) {
+                r8 = clone(pos);
+                reportFailures++;
+                if (input.charCodeAt(pos.offset) === 34) {
+                  r7 = "\"";
+                  advance(pos, 1);
+                } else {
+                  r7 = null;
+                  if (reportFailures === 0) {
+                    matchFailed("\"\\\"\"");
+                  }
+                }
+                reportFailures--;
+                if (r7 === null) {
+                  r7 = "";
+                } else {
+                  r7 = null;
+                  pos = clone(r8);
+                }
+                if (r7 !== null) {
+                  r2 = [r5, r6, r7];
+                } else {
+                  r2 = null;
+                  pos = clone(r4);
+                }
+              } else {
+                r2 = null;
+                pos = clone(r4);
+              }
+            } else {
+              r2 = null;
+              pos = clone(r4);
+            }
+            if (r2 !== null) {
+              r2 = (function(offset, line, column, s) { return s.join(''); })(r3.offset, r3.line, r3.column, r2);
+            }
+            if (r2 === null) {
+              pos = clone(r3);
+            }
+          }
+        }
+        if (r2 !== null) {
+          r0 = [];
+          while (r2 !== null) {
+            r0.push(r2);
+            r2 = parse_stringLineData();
+            if (r2 === null) {
+              if (input.charCodeAt(pos.offset) === 39) {
+                r2 = "'";
+                advance(pos, 1);
+              } else {
+                r2 = null;
+                if (reportFailures === 0) {
+                  matchFailed("\"'\"");
+                }
+              }
+              if (r2 === null) {
+                r3 = clone(pos);
+                r4 = clone(pos);
+                if (input.charCodeAt(pos.offset) === 34) {
+                  r5 = "\"";
+                  advance(pos, 1);
+                } else {
+                  r5 = null;
+                  if (reportFailures === 0) {
+                    matchFailed("\"\\\"\"");
+                  }
+                }
+                if (r5 !== null) {
+                  if (input.charCodeAt(pos.offset) === 34) {
+                    r6 = "\"";
+                    advance(pos, 1);
+                  } else {
+                    r6 = null;
+                    if (reportFailures === 0) {
+                      matchFailed("\"\\\"\"");
+                    }
+                  }
+                  r6 = r6 !== null ? r6 : "";
+                  if (r6 !== null) {
+                    r8 = clone(pos);
+                    reportFailures++;
+                    if (input.charCodeAt(pos.offset) === 34) {
+                      r7 = "\"";
+                      advance(pos, 1);
+                    } else {
+                      r7 = null;
+                      if (reportFailures === 0) {
+                        matchFailed("\"\\\"\"");
+                      }
+                    }
+                    reportFailures--;
+                    if (r7 === null) {
+                      r7 = "";
+                    } else {
+                      r7 = null;
+                      pos = clone(r8);
+                    }
+                    if (r7 !== null) {
+                      r2 = [r5, r6, r7];
+                    } else {
+                      r2 = null;
+                      pos = clone(r4);
+                    }
+                  } else {
+                    r2 = null;
+                    pos = clone(r4);
+                  }
+                } else {
+                  r2 = null;
+                  pos = clone(r4);
+                }
+                if (r2 !== null) {
+                  r2 = (function(offset, line, column, s) { return s.join(''); })(r3.offset, r3.line, r3.column, r2);
+                }
+                if (r2 === null) {
+                  pos = clone(r3);
+                }
+              }
+            }
+          }
+        } else {
+          r0 = null;
+        }
+        if (r0 !== null) {
+          r0 = (function(offset, line, column, d) { return new CS.String(d.join('')).p(line, column, offset); })(r1.offset, r1.line, r1.column, r0);
+        }
+        if (r0 === null) {
+          pos = clone(r1);
+        }
+        if (r0 === null) {
+          r1 = clone(pos);
+          r2 = clone(pos);
+          if (input.substr(pos.offset, 2) === "#{") {
+            r3 = "#{";
+            advance(pos, 2);
+          } else {
+            r3 = null;
+            if (reportFailures === 0) {
+              matchFailed("\"#{\"");
+            }
+          }
+          if (r3 !== null) {
+            r4 = parse__();
+            if (r4 !== null) {
+              r5 = parse_expression();
+              if (r5 !== null) {
+                r6 = parse__();
+                if (r6 !== null) {
+                  if (input.charCodeAt(pos.offset) === 125) {
+                    r7 = "}";
+                    advance(pos, 1);
+                  } else {
+                    r7 = null;
+                    if (reportFailures === 0) {
+                      matchFailed("\"}\"");
+                    }
+                  }
+                  if (r7 !== null) {
+                    r0 = [r3, r4, r5, r6, r7];
+                  } else {
+                    r0 = null;
+                    pos = clone(r2);
+                  }
+                } else {
+                  r0 = null;
+                  pos = clone(r2);
+                }
+              } else {
+                r0 = null;
+                pos = clone(r2);
+              }
+            } else {
+              r0 = null;
+              pos = clone(r2);
+            }
+          } else {
+            r0 = null;
+            pos = clone(r2);
+          }
+          if (r0 !== null) {
+            r0 = (function(offset, line, column, e) { return e; })(r1.offset, r1.line, r1.column, r5);
           }
           if (r0 === null) {
             pos = clone(r1);
@@ -16111,7 +16426,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
             r0 = (function(offset, line, column, d, flags) {
                 if(!isValidRegExpFlags(flags))
                   throw new SyntaxError(['regular expression flags'], 'regular expression flags', offset, line, column);
-                return new CS.RegExp(d ? d.join('') : '', flags || []).p(line, column, offset);;
+                return new CS.RegExp(d ? d.join('') : '', flags || []).p(line, column, offset);
               })(r1.offset, r1.line, r1.column, r4, r6);
           }
           if (r0 === null) {
@@ -16611,7 +16926,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
         }
         if (r0 !== null) {
           r0 = (function(offset, line, column, ws, e) {
-              return new CS.Throw(e).r('throw' + ws + e.raw).p(line, column, offset);
+              return gc(new CS.Throw(e).r('throw' + ws + e.raw).p(line, column, offset));
             })(r1.offset, r1.line, r1.column, r4, r5);
         }
         if (r0 === null) {
@@ -16668,7 +16983,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
           r0 = (function(offset, line, column, maybeExpression) {
               var ws = maybeExpression ? maybeExpression[0] : '',
                   e = maybeExpression ? maybeExpression[1] : null;
-              return new CS.Return(e).r('return' + ws + (e ? e.raw : '')).p(line, column, offset);
+              return gc(new CS.Return(e).r('return' + ws + (e ? e.raw : '')).p(line, column, offset));
             })(r1.offset, r1.line, r1.column, r4);
         }
         if (r0 === null) {
@@ -16695,7 +17010,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
         r1 = clone(pos);
         r0 = parse_CONTINUE();
         if (r0 !== null) {
-          r0 = (function(offset, line, column) { return (new CS.Continue).r('continue').p(line, column, offset); })(r1.offset, r1.line, r1.column);
+          r0 = (function(offset, line, column) { return (gc(new CS.Continue).r('continue').p(line, column, offset)); })(r1.offset, r1.line, r1.column);
         }
         if (r0 === null) {
           pos = clone(r1);
@@ -16721,7 +17036,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
         r1 = clone(pos);
         r0 = parse_BREAK();
         if (r0 !== null) {
-          r0 = (function(offset, line, column) { return (new CS.Break).r('break').p(line, column, offset); })(r1.offset, r1.line, r1.column);
+          r0 = (function(offset, line, column) { return (gc(new CS.Break).r('break').p(line, column, offset)); })(r1.offset, r1.line, r1.column);
         }
         if (r0 === null) {
           pos = clone(r1);
@@ -16908,7 +17223,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
           return cachedResult.result;
         }
         
-        var r0, r1, r2, r3, r4;
+        var r0, r1, r2, r3, r4, r5;
         
         r0 = parse_memberAccess();
         if (r0 === null) {
@@ -16937,7 +17252,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
             pos = clone(r2);
           }
           if (r0 !== null) {
-            r0 = (function(offset, line, column, i) { return i; })(r1.offset, r1.line, r1.column, r4);
+            r0 = (function(offset, line, column, i) { return gc(i); })(r1.offset, r1.line, r1.column, r4);
           }
           if (r0 === null) {
             pos = clone(r1);
@@ -16948,6 +17263,51 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
               r0 = parse_positionalDestructuring();
               if (r0 === null) {
                 r0 = parse_namedDestructuring();
+                if (r0 === null) {
+                  r1 = clone(pos);
+                  r2 = clone(pos);
+                  if (input.charCodeAt(pos.offset) === 40) {
+                    r3 = "(";
+                    advance(pos, 1);
+                  } else {
+                    r3 = null;
+                    if (reportFailures === 0) {
+                      matchFailed("\"(\"");
+                    }
+                  }
+                  if (r3 !== null) {
+                    r4 = parse_Assignable();
+                    if (r4 !== null) {
+                      if (input.charCodeAt(pos.offset) === 41) {
+                        r5 = ")";
+                        advance(pos, 1);
+                      } else {
+                        r5 = null;
+                        if (reportFailures === 0) {
+                          matchFailed("\")\"");
+                        }
+                      }
+                      if (r5 !== null) {
+                        r0 = [r3, r4, r5];
+                      } else {
+                        r0 = null;
+                        pos = clone(r2);
+                      }
+                    } else {
+                      r0 = null;
+                      pos = clone(r2);
+                    }
+                  } else {
+                    r0 = null;
+                    pos = clone(r2);
+                  }
+                  if (r0 !== null) {
+                    r0 = (function(offset, line, column, a) { return a; })(r1.offset, r1.line, r1.column, r4);
+                  }
+                  if (r0 === null) {
+                    pos = clone(r1);
+                  }
+                }
               }
             }
           }
@@ -17023,7 +17383,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
         if (r0 !== null) {
           r0 = (function(offset, line, column, members, t, ws) {
               var raw = '{' + members.raw + t + ws + '}'
-              return new CS.ArrayInitialiser(members.list).r(raw).p(line, column, offset);
+              return gc(new CS.ArrayInitialiser(members.list).r(raw).p(line, column, offset));
             })(r1.offset, r1.line, r1.column, r4, r5, r6);
         }
         if (r0 === null) {
@@ -17304,7 +17664,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
         if (r0 !== null) {
           r0 = (function(offset, line, column, members, t, ws) {
             var raw = '{' + members.raw + t + ws + '}'
-            return new CS.ObjectInitialiser(members.list).r(raw).p(line, column, offset);
+            return gc(new CS.ObjectInitialiser(members.list).r(raw).p(line, column, offset));
           })(r1.offset, r1.line, r1.column, r4, r5, r6);
         }
         if (r0 === null) {
@@ -17588,7 +17948,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
         if (r0 !== null) {
           r0 = (function(offset, line, column, key, ws0, ws1, val) {
                 var raw = key.raw + ws0 + ':' + ws1 + val.raw;
-                return new CS.ObjectInitialiserMember(key, val).r(raw).p(line, column, offset);
+                return gc(new CS.ObjectInitialiserMember(key, val).r(raw).p(line, column, offset));
               })(r1.offset, r1.line, r1.column, r3, r4, r6, r7);
         }
         if (r0 === null) {
@@ -17599,8 +17959,8 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
           r0 = parse_contextVar();
           if (r0 !== null) {
             r0 = (function(offset, line, column, v) {
-                  var key = new CS.String(v.memberName).r(v.memberName).p(line, column + 1)
-                  return new CS.ObjectInitialiserMember(key, v).r(v.raw).p(line, column, offset);
+                  var key = gc(new CS.String(v.memberName).r(v.memberName).p(line, column + 1));
+                  return gc(new CS.ObjectInitialiserMember(key, v).r(v.raw).p(line, column, offset));
                 })(r1.offset, r1.line, r1.column, r0);
           }
           if (r0 === null) {
@@ -17633,7 +17993,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
             }
             if (r0 !== null) {
               r0 = (function(offset, line, column, i) {
-                    return new CS.ObjectInitialiserMember(i, i).r(i.raw).p(line, column, offset);
+                    return gc(new CS.ObjectInitialiserMember(i, i).r(i.raw).p(line, column, offset));
                   })(r1.offset, r1.line, r1.column, r4);
             }
             if (r0 === null) {
@@ -17866,7 +18226,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
           pos = clone(r2);
         }
         if (r0 !== null) {
-          r0 = (function(offset, line, column, ws, c) { return ws.join('') + (c && c[0] + c[1].join('')); })(r1.offset, r1.line, r1.column, r3, r4);
+          r0 = (function(offset, line, column, ws, c) { return ws.join('') + (c && c[0].raw + c[1].join('')); })(r1.offset, r1.line, r1.column, r3, r4);
         }
         if (r0 === null) {
           pos = clone(r1);
@@ -17929,7 +18289,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
           return cachedResult.result;
         }
         
-        var r0, r1, r2, r3, r4, r5, r6, r7, r8, r9;
+        var r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, r11;
         
         r1 = clone(pos);
         r2 = clone(pos);
@@ -17943,88 +18303,126 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
           }
         }
         if (r3 !== null) {
-          r4 = [];
-          r6 = clone(pos);
-          r7 = clone(pos);
-          r9 = clone(pos);
-          reportFailures++;
-          r8 = parse_TERM();
-          reportFailures--;
-          if (r8 === null) {
-            r8 = "";
+          if (input.charCodeAt(pos.offset) === 35) {
+            r4 = "#";
+            advance(pos, 1);
           } else {
-            r8 = null;
-            pos = clone(r9);
+            r4 = null;
+            if (reportFailures === 0) {
+              matchFailed("\"#\"");
+            }
           }
-          if (r8 !== null) {
-            if (input.length > pos.offset) {
-              r9 = input.charAt(pos.offset);
+          r4 = r4 !== null ? r4 : "";
+          if (r4 !== null) {
+            r6 = clone(pos);
+            reportFailures++;
+            if (input.charCodeAt(pos.offset) === 35) {
+              r5 = "#";
               advance(pos, 1);
             } else {
-              r9 = null;
+              r5 = null;
               if (reportFailures === 0) {
-                matchFailed("any character");
+                matchFailed("\"#\"");
               }
             }
-            if (r9 !== null) {
-              r5 = [r8, r9];
-            } else {
-              r5 = null;
-              pos = clone(r7);
-            }
-          } else {
-            r5 = null;
-            pos = clone(r7);
-          }
-          if (r5 !== null) {
-            r5 = (function(offset, line, column, c) { return c})(r6.offset, r6.line, r6.column, r9);
-          }
-          if (r5 === null) {
-            pos = clone(r6);
-          }
-          while (r5 !== null) {
-            r4.push(r5);
-            r6 = clone(pos);
-            r7 = clone(pos);
-            r9 = clone(pos);
-            reportFailures++;
-            r8 = parse_TERM();
             reportFailures--;
-            if (r8 === null) {
-              r8 = "";
-            } else {
-              r8 = null;
-              pos = clone(r9);
-            }
-            if (r8 !== null) {
-              if (input.length > pos.offset) {
-                r9 = input.charAt(pos.offset);
-                advance(pos, 1);
-              } else {
-                r9 = null;
-                if (reportFailures === 0) {
-                  matchFailed("any character");
-                }
-              }
-              if (r9 !== null) {
-                r5 = [r8, r9];
-              } else {
-                r5 = null;
-                pos = clone(r7);
-              }
+            if (r5 === null) {
+              r5 = "";
             } else {
               r5 = null;
-              pos = clone(r7);
-            }
-            if (r5 !== null) {
-              r5 = (function(offset, line, column, c) { return c})(r6.offset, r6.line, r6.column, r9);
-            }
-            if (r5 === null) {
               pos = clone(r6);
             }
-          }
-          if (r4 !== null) {
-            r0 = [r3, r4];
+            if (r5 !== null) {
+              r6 = [];
+              r8 = clone(pos);
+              r9 = clone(pos);
+              r11 = clone(pos);
+              reportFailures++;
+              r10 = parse_TERM();
+              reportFailures--;
+              if (r10 === null) {
+                r10 = "";
+              } else {
+                r10 = null;
+                pos = clone(r11);
+              }
+              if (r10 !== null) {
+                if (input.length > pos.offset) {
+                  r11 = input.charAt(pos.offset);
+                  advance(pos, 1);
+                } else {
+                  r11 = null;
+                  if (reportFailures === 0) {
+                    matchFailed("any character");
+                  }
+                }
+                if (r11 !== null) {
+                  r7 = [r10, r11];
+                } else {
+                  r7 = null;
+                  pos = clone(r9);
+                }
+              } else {
+                r7 = null;
+                pos = clone(r9);
+              }
+              if (r7 !== null) {
+                r7 = (function(offset, line, column, c) { return c})(r8.offset, r8.line, r8.column, r11);
+              }
+              if (r7 === null) {
+                pos = clone(r8);
+              }
+              while (r7 !== null) {
+                r6.push(r7);
+                r8 = clone(pos);
+                r9 = clone(pos);
+                r11 = clone(pos);
+                reportFailures++;
+                r10 = parse_TERM();
+                reportFailures--;
+                if (r10 === null) {
+                  r10 = "";
+                } else {
+                  r10 = null;
+                  pos = clone(r11);
+                }
+                if (r10 !== null) {
+                  if (input.length > pos.offset) {
+                    r11 = input.charAt(pos.offset);
+                    advance(pos, 1);
+                  } else {
+                    r11 = null;
+                    if (reportFailures === 0) {
+                      matchFailed("any character");
+                    }
+                  }
+                  if (r11 !== null) {
+                    r7 = [r10, r11];
+                  } else {
+                    r7 = null;
+                    pos = clone(r9);
+                  }
+                } else {
+                  r7 = null;
+                  pos = clone(r9);
+                }
+                if (r7 !== null) {
+                  r7 = (function(offset, line, column, c) { return c})(r8.offset, r8.line, r8.column, r11);
+                }
+                if (r7 === null) {
+                  pos = clone(r8);
+                }
+              }
+              if (r6 !== null) {
+                r0 = [r3, r4, r5, r6];
+              } else {
+                r0 = null;
+                pos = clone(r2);
+              }
+            } else {
+              r0 = null;
+              pos = clone(r2);
+            }
           } else {
             r0 = null;
             pos = clone(r2);
@@ -18034,7 +18432,12 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
           pos = clone(r2);
         }
         if (r0 !== null) {
-          r0 = (function(offset, line, column, cs) { return '#' + (cs && cs.join('')); })(r1.offset, r1.line, r1.column, r4);
+          r0 = (function(offset, line, column, h, cs) {
+            var content = h + (cs && cs.join('')),
+                co = {raw: '#' + content, content: content, type: 'single'};
+            comments.push(co);
+            return co;
+          })(r1.offset, r1.line, r1.column, r4, r6);
         }
         if (r0 === null) {
           pos = clone(r1);
@@ -18146,7 +18549,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
                 pos = clone(r8);
               }
               if (r6 !== null) {
-                r6 = (function(offset, line, column, a, b) {return a + b;})(r7.offset, r7.line, r7.column, r9, r10);
+                r6 = (function(offset, line, column, a, b) { return a + b;})(r7.offset, r7.line, r7.column, r9, r10);
               }
               if (r6 === null) {
                 pos = clone(r7);
@@ -18220,7 +18623,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
                   pos = clone(r8);
                 }
                 if (r6 !== null) {
-                  r6 = (function(offset, line, column, a, b) {return a + b;})(r7.offset, r7.line, r7.column, r9, r10);
+                  r6 = (function(offset, line, column, a, b) { return a + b;})(r7.offset, r7.line, r7.column, r9, r10);
                 }
                 if (r6 === null) {
                   pos = clone(r7);
@@ -18256,7 +18659,13 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
           pos = clone(r2);
         }
         if (r0 !== null) {
-          r0 = (function(offset, line, column, c, cs) { return '###' + c + cs.join('') + '###'; })(r1.offset, r1.line, r1.column, r4, r5);
+          r0 = (function(offset, line, column, c, cs) {
+            var content = c + cs.join(''),
+                processed = /\n/.test(content) ? stripLeadingWhitespace(content) : content,
+                co = {raw: '###' + content + '###', content: processed, type: 'block'};
+            comments.push(co);
+            return co;
+          })(r1.offset, r1.line, r1.column, r4, r5);
         }
         if (r0 === null) {
           pos = clone(r1);
@@ -18533,35 +18942,42 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
           return cachedResult.result;
         }
         
-        var r0, r1, r2, r3, r4, r5, r6, r7;
+        var r0, r1, r2, r3, r4, r5, r6, r7, r8;
         
         r1 = clone(pos);
         r3 = clone(pos);
-        r4 = parse__();
-        if (r4 !== null) {
-          r5 = parse_comment();
-          r5 = r5 !== null ? r5 : "";
-          if (r5 !== null) {
-            r6 = parse_TERM();
-            if (r6 !== null) {
-              r7 = parse_blockComment();
-              r7 = r7 !== null ? r7 : "";
-              if (r7 !== null) {
-                r2 = [r4, r5, r6, r7];
+        r4 = clone(pos);
+        r5 = parse__();
+        if (r5 !== null) {
+          r6 = parse_comment();
+          r6 = r6 !== null ? r6 : "";
+          if (r6 !== null) {
+            r7 = parse_TERM();
+            if (r7 !== null) {
+              r8 = parse_blockComment();
+              r8 = r8 !== null ? r8 : "";
+              if (r8 !== null) {
+                r2 = [r5, r6, r7, r8];
               } else {
                 r2 = null;
-                pos = clone(r3);
+                pos = clone(r4);
               }
             } else {
               r2 = null;
-              pos = clone(r3);
+              pos = clone(r4);
             }
           } else {
             r2 = null;
-            pos = clone(r3);
+            pos = clone(r4);
           }
         } else {
           r2 = null;
+          pos = clone(r4);
+        }
+        if (r2 !== null) {
+          r2 = (function(offset, line, column, w, c, t, bc) { return w + (c.raw || '') + t + (bc.raw || ''); })(r3.offset, r3.line, r3.column, r5, r6, r7, r8);
+        }
+        if (r2 === null) {
           pos = clone(r3);
         }
         if (r2 !== null) {
@@ -18569,31 +18985,38 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
           while (r2 !== null) {
             r0.push(r2);
             r3 = clone(pos);
-            r4 = parse__();
-            if (r4 !== null) {
-              r5 = parse_comment();
-              r5 = r5 !== null ? r5 : "";
-              if (r5 !== null) {
-                r6 = parse_TERM();
-                if (r6 !== null) {
-                  r7 = parse_blockComment();
-                  r7 = r7 !== null ? r7 : "";
-                  if (r7 !== null) {
-                    r2 = [r4, r5, r6, r7];
+            r4 = clone(pos);
+            r5 = parse__();
+            if (r5 !== null) {
+              r6 = parse_comment();
+              r6 = r6 !== null ? r6 : "";
+              if (r6 !== null) {
+                r7 = parse_TERM();
+                if (r7 !== null) {
+                  r8 = parse_blockComment();
+                  r8 = r8 !== null ? r8 : "";
+                  if (r8 !== null) {
+                    r2 = [r5, r6, r7, r8];
                   } else {
                     r2 = null;
-                    pos = clone(r3);
+                    pos = clone(r4);
                   }
                 } else {
                   r2 = null;
-                  pos = clone(r3);
+                  pos = clone(r4);
                 }
               } else {
                 r2 = null;
-                pos = clone(r3);
+                pos = clone(r4);
               }
             } else {
               r2 = null;
+              pos = clone(r4);
+            }
+            if (r2 !== null) {
+              r2 = (function(offset, line, column, w, c, t, bc) { return w + (c.raw || '') + t + (bc.raw || ''); })(r3.offset, r3.line, r3.column, r5, r6, r7, r8);
+            }
+            if (r2 === null) {
               pos = clone(r3);
             }
           }
@@ -18602,7 +19025,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
         }
         if (r0 !== null) {
           r0 = (function(offset, line, column, ws) {
-            return ws.map(function(s){ return s.join(''); }).join('');
+            return ws.map(function(s){ return s; }).join('');
           })(r1.offset, r1.line, r1.column, r0);
         }
         if (r0 === null) {
@@ -18642,9 +19065,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
           pos = clone(r2);
         }
         if (r0 !== null) {
-          r0 = (function(offset, line, column, t, i) {
-            return t + i;
-          })(r1.offset, r1.line, r1.column, r3, r4);
+          r0 = (function(offset, line, column, t, i) { return t + i; })(r1.offset, r1.line, r1.column, r3, r4);
         }
         if (r0 === null) {
           pos = clone(r1);
@@ -22058,7 +22479,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
           pos = clone(r2);
         }
         if (r0 !== null) {
-          r0 = (function(offset, line, column, h0, h1, h2, h3) { return String.fromCharCode(parseInt(h0 + h1 + h2 + h3, 16)); })(r1.offset, r1.line, r1.column, r4, r5, r6, r7);
+          r0 = (function(offset, line, column, h0, h1, h2, h3) { return '\\u' + h0 + h1 + h2 + h3; })(r1.offset, r1.line, r1.column, r4, r5, r6, r7);
         }
         if (r0 === null) {
           pos = clone(r1);
@@ -23052,6 +23473,14 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
       
       var CS = require("./nodes"),
           inspect = function(o){ console.log(require('util').inspect(o, false, 9e9, true)); },
+          comments = [],
+          gc = function(node){
+            if (comments.length) {
+              node.comments = comments;
+              comments = [];
+            }
+            return node;
+          },
           constructorLookup =
             { ';': CS.SeqOp
             , '=': CS.AssignOp
@@ -23084,7 +23513,7 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
             , '/': CS.DivideOp
             , '%': CS.RemOp
             , '**': CS.ExpOp
-            },
+          },
           foldl = function(fn, memo, list){
             for(var i = 0, l = list.length; i < l; ++i)
               memo = fn(memo, list[i]);
@@ -23104,6 +23533,9 @@ require.define("/lib/coffee2ls/parser.js",function(require,module,exports,__dirn
                   if(left instanceof CS.String) {
                     if(left === init) delete left.p(s.line, s.column, s.offset).generated;
                     left.data = left.data + s.data;
+                    if (s.comments) {
+                      left.comments = (left.comments || []).concat(s.comments);
+                    }
                     return memo;
                   } else if(left instanceof CS.ConcatOp) {
                     left = left.right
@@ -23254,7 +23686,7 @@ require.define("/node_modules/coffee2ls-codegen/lib/coffee2ls-codegen.js",functi
     __slice = [].slice;
 
   (function(exports) {
-    var TAB, clone, eq, formatInterpolation, formatStringData, genVar, generate, generateArgs, indent, levels, lsReserved, needsParensWhenOnLeft, operators, parens, precedence;
+    var TAB, clone, comments, eq, formatInterpolation, formatStringData, genVar, generate, generateArgs, generateComments, indent, levels, lsReserved, needsParensWhenOnLeft, operators, parens, precedence;
     TAB = '  ';
     indent = function(code) {
       var line;
@@ -23273,7 +23705,7 @@ require.define("/node_modules/coffee2ls-codegen/lib/coffee2ls-codegen.js",functi
       return "(" + code + ")";
     };
     formatStringData = function(data) {
-      return data.replace(/[^\x20-\x7e]|['\\]/g, function(c) {
+      return data.replace(/[\x00-\x1F]|['\\]/g, function(c) {
         var escape, pad;
         switch (c) {
           case '\0':
@@ -23297,7 +23729,7 @@ require.define("/node_modules/coffee2ls-codegen/lib/coffee2ls-codegen.js",functi
             pad = "0000".slice(escape.length);
             return "\\u" + pad + escape;
         }
-      });
+      }).replace(/\\\\(u[0-9a-fA-F]{4})/, '\\$1');
     };
     formatInterpolation = function(ast, options) {
       var left, right;
@@ -23430,6 +23862,37 @@ require.define("/node_modules/coffee2ls-codegen/lib/coffee2ls-codegen.js",functi
       options.varsFunc.push(out);
       return out;
     };
+    comments = [];
+    generateComments = function() {
+      var co, comment;
+      co = (function() {
+        var _i, _len, _results;
+        _results = [];
+        for (_i = 0, _len = comments.length; _i < _len; _i++) {
+          comment = comments[_i];
+          switch (comment.type) {
+            case 'single':
+              _results.push("#" + comment.content);
+              break;
+            case 'block':
+              if (/\n/.test(comment.raw)) {
+                _results.push("/*\n" + comment.content + "\n*/");
+              } else {
+                _results.push("/*" + comment.content + "*/");
+              }
+              break;
+            default:
+              _results.push(void 0);
+          }
+        }
+        return _results;
+      })();
+      comments = [];
+      if (!co.length) {
+        return '';
+      }
+      return "" + (co.join('\n')) + "\n";
+    };
     levels = [['SeqOp'], ['Conditional', 'ForIn', 'ForOf', 'While'], ['FunctionApplication', 'SoakedFunctionApplication'], ['AssignOp', 'CompoundAssignOp', 'ExistsAssignOp'], ['LogicalOrOp'], ['LogicalAndOp'], ['BitOrOp'], ['BitXorOp'], ['BitAndOp'], ['ExistsOp'], ['EQOp', 'NEQOp'], ['LTOp', 'LTEOp', 'GTOp', 'GTEOp', 'InOp', 'OfOp', 'InstanceofOp'], ['LeftShiftOp', 'SignedRightShiftOp', 'UnsignedRightShiftOp'], ['PlusOp', 'SubtractOp'], ['MultiplyOp', 'DivideOp', 'RemOp'], ['ExpOp', 'ExtendOp'], ['UnaryPlusOp', 'UnaryNegateOp', 'LogicalNotOp', 'BitNotOp', 'DoOp', 'TypeofOp', 'PreIncrementOp', 'PreDecrementOp', 'DeleteOp'], ['UnaryExistsOp', 'ShallowCopyArray', 'PostIncrementOp', 'PostDecrementOp', 'Spread'], ['NewOp'], ['MemberAccessOp', 'SoakedMemberAccessOp', 'DynamicMemberAccessOp', 'SoakedDynamicMemberAccessOp', 'ProtoMemberAccessOp', 'DynamicProtoMemberAccessOp', 'SoakedProtoMemberAccessOp', 'SoakedDynamicProtoMemberAccessOp']];
     precedence = {};
     (function() {
@@ -23504,7 +23967,7 @@ require.define("/node_modules/coffee2ls-codegen/lib/coffee2ls-codegen.js",functi
     };
     lsReserved = ['it', 'that', 'fallthrough', 'otherwise', 'where', 'xor', 'match'];
     return exports.generate = generate = function(ast, options) {
-      var absNum, allNew, allReassign, c, comprehension, exp, expression_, finallyBody, findIds, firstRef, flag, hasAlternate, i, isMultiline, key_, left, line, m, matched, memberAccessOps, members_, needsParens, newline, nonLiteral, out, output, p, parameters, parent, parentClassName, prec, reg, right, s, secondRef, sep, spaces, src, state, type, usedAsExpression, v, vars, _alternate, _argList, _args, _assg, _assignee, _block, _body, _by, _catchAssg, _catchBody, _condition, _conditions, _consequent, _ctor, _expr, _expression, _exprs, _filter, _finally, _firstAssg, _flags, _fn, _fn_indented, _indexingExpr, _left, _main, _mainPart, _mid, _nameAssg, _op, _output, _own, _paramList, _parent, _rangeLeft, _rangeRight, _ref, _ref1, _ref2, _ref3, _right, _s, _secondAssg, _step, _symbol, _target;
+      var absNum, allNew, allReassign, c, comprehension, exp, expression_, finallyBody, findIds, firstRef, flag, hasAlternate, i, isMultiline, key_, left, line, m, matched, memberAccessOps, members_, needsParens, newline, nonLiteral, out, output, p, parameters, parent, parentClassName, prec, reg, right, s, secondRef, sep, spaces, src, state, type, usedAsExpression, v, vars, _alternate, _argList, _args, _assg, _assignee, _block, _body, _by, _catchAssg, _catchBody, _condition, _conditions, _consequent, _ctor, _expr, _expression, _exprs, _filter, _finally, _firstAssg, _flags, _fn, _fn_indented, _indexingExpr, _left, _main, _mainPart, _mid, _nameAssg, _op, _own, _paramList, _parent, _rangeLeft, _rangeRight, _ref, _ref1, _ref2, _ref3, _right, _s, _secondAssg, _step, _symbol, _target;
       if (options == null) {
         options = {};
       }
@@ -23527,17 +23990,16 @@ require.define("/node_modules/coffee2ls-codegen/lib/coffee2ls-codegen.js",functi
       parent = options.ancestors[0];
       parentClassName = parent != null ? parent.className : void 0;
       usedAsExpression = (parent != null) && parentClassName !== 'Block';
+      if (ast.comments) {
+        comments = comments.concat(ast.comments);
+      }
       src = (function() {
-        var _i, _j, _len, _len1, _ref10, _ref11, _ref12, _ref13, _ref14, _ref15, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
+        var _i, _j, _len, _len1, _ref10, _ref11, _ref12, _ref13, _ref14, _ref4, _ref5, _ref6, _ref7, _ref8, _ref9;
         switch (ast.className) {
           case 'Program':
             options.ancestors = [ast].concat(__slice.call(options.ancestors));
-            if (ast.body != null) {
-              return generate(ast.body, options);
-            } else {
-              return '';
-            }
-            break;
+            out = ast.body != null ? generate(ast.body, options) : '';
+            return "" + (generateComments()) + out;
           case 'Block':
             options = clone(options, {
               ancestors: [ast].concat(__slice.call(options.ancestors)),
@@ -23547,16 +24009,17 @@ require.define("/node_modules/coffee2ls-codegen/lib/coffee2ls-codegen.js",functi
               return generate((new Undefined).g(), options);
             } else {
               sep = parentClassName === 'Program' ? '\n\n' : '\n';
-              return ((function() {
+              out = (function() {
                 var _i, _len, _ref4, _results;
                 _ref4 = ast.statements;
                 _results = [];
                 for (_i = 0, _len = _ref4.length; _i < _len; _i++) {
                   s = _ref4[_i];
-                  _results.push(generate(s, options));
+                  _results.push("" + (generateComments()) + (generate(s, options)));
                 }
                 return _results;
-              })()).join(sep);
+              })();
+              return out.join(sep);
             }
             break;
           case 'Conditional':
@@ -23566,7 +24029,7 @@ require.define("/node_modules/coffee2ls-codegen/lib/coffee2ls-codegen.js",functi
             _consequent = generate((_ref4 = ast.consequent) != null ? _ref4 : (new Undefined).g(), options);
             _alternate = hasAlternate ? generate(ast.alternate, options) : "";
             _condition = generate(ast.condition, options);
-            isMultiline = _consequent.length > 90 || _alternate.length > 90 || __indexOf.call(_alternate, '\n') >= 0 || __indexOf.call(_consequent, '\n') >= 0;
+            isMultiline = parentClassName === 'Block' || _consequent.length > 90 || _alternate.length > 90 || __indexOf.call(_alternate, '\n') >= 0 || __indexOf.call(_consequent, '\n') >= 0;
             if (hasAlternate) {
               _alternate = isMultiline ? "\nelse\n" + (indent(_alternate)) : " else " + _alternate;
             }
@@ -23579,8 +24042,8 @@ require.define("/node_modules/coffee2ls-codegen/lib/coffee2ls-codegen.js",functi
             }
             break;
           case 'Identifier':
-            if (_ref5 = ast.data, __indexOf.call(lsReserved, _ref5) >= 0) {
-              return genVar(options, ast.data);
+            if ((_ref5 = ast.data, __indexOf.call(lsReserved, _ref5) >= 0) && !options.isKey) {
+              return ast.data + '$$';
             } else {
               return ast.data;
             }
@@ -23664,13 +24127,13 @@ require.define("/node_modules/coffee2ls-codegen/lib/coffee2ls-codegen.js",functi
               ancestors: [ast].concat(__slice.call(options.ancestors)),
               precedence: precedence.AssignmentExpression
             });
-            key_ = generate(ast.key, options);
+            key_ = generate(ast.key, clone(options, {
+              isKey: true
+            }));
             expression_ = generate(ast.expression, options);
             memberAccessOps = ['MemberAccessOp', 'ProtoMemberAccessOp', 'SoakedMemberAccessOp', 'SoakedProtoMemberAccessOp'];
             if (eq(ast.key, ast.expression)) {
               return "" + key_;
-            } else if ((_ref6 = ast.expression.className, __indexOf.call(memberAccessOps, _ref6) >= 0) && ast.key.data === ast.expression.memberName) {
-              return "" + expression_;
             } else {
               return "" + key_ + ": " + expression_;
             }
@@ -23684,11 +24147,11 @@ require.define("/node_modules/coffee2ls-codegen/lib/coffee2ls-codegen.js",functi
               varsFunc: []
             });
             parameters = (function() {
-              var _j, _len1, _ref7, _results;
-              _ref7 = ast.parameters;
+              var _j, _len1, _ref6, _results;
+              _ref6 = ast.parameters;
               _results = [];
-              for (_j = 0, _len1 = _ref7.length; _j < _len1; _j++) {
-                p = _ref7[_j];
+              for (_j = 0, _len1 = _ref6.length; _j < _len1; _j++) {
+                p = _ref6[_j];
                 _results.push(generate(p, options));
               }
               return _results;
@@ -23710,7 +24173,7 @@ require.define("/node_modules/coffee2ls-codegen/lib/coffee2ls-codegen.js",functi
             if (ast.className === 'AssignOp') {
               vars = [];
               findIds = function(node) {
-                var member, _j, _len1, _ref7;
+                var member, _j, _len1, _ref6;
                 switch (node.className) {
                   case 'Identifier':
                     vars.push(node.data);
@@ -23723,9 +24186,9 @@ require.define("/node_modules/coffee2ls-codegen/lib/coffee2ls-codegen.js",functi
                     break;
                   case 'ArrayInitialiser':
                   case 'ObjectInitialiser':
-                    _ref7 = node.members;
-                    for (_j = 0, _len1 = _ref7.length; _j < _len1; _j++) {
-                      member = _ref7[_j];
+                    _ref6 = node.members;
+                    for (_j = 0, _len1 = _ref6.length; _j < _len1; _j++) {
+                      member = _ref6[_j];
                       findIds(member);
                     }
                 }
@@ -23771,7 +24234,7 @@ require.define("/node_modules/coffee2ls-codegen/lib/coffee2ls-codegen.js",functi
             _op = operators[ast.op];
             _assignee = generate(ast.assignee, options);
             _expr = generate(ast.expression, options);
-            _assg = (_ref7 = ast.op) === 'LogicalOrOp' || _ref7 === 'LogicalAndOp' ? ':=' : '=';
+            _assg = (_ref6 = ast.op) === 'LogicalOrOp' || _ref6 === 'LogicalAndOp' ? ':=' : '=';
             return "" + _assignee + " " + _op + _assg + " " + _expr;
           case 'SeqOp':
             prec = precedence[ast.className];
@@ -23809,7 +24272,7 @@ require.define("/node_modules/coffee2ls-codegen/lib/coffee2ls-codegen.js",functi
           case 'ExpOp':
           case 'ExtendsOp':
             _op = operators[ast.className];
-            if (((_ref8 = ast.className) === 'InOp' || _ref8 === 'OfOp' || _ref8 === 'InstanceofOp') && parentClassName === 'LogicalNotOp') {
+            if (((_ref7 = ast.className) === 'InOp' || _ref7 === 'OfOp' || _ref7 === 'InstanceofOp') && parentClassName === 'LogicalNotOp') {
               _op = "not " + _op;
             }
             if (!options.inFunctionApplication) {
@@ -23844,7 +24307,7 @@ require.define("/node_modules/coffee2ls-codegen/lib/coffee2ls-codegen.js",functi
             _op = operators[ast.className];
             prec = precedence[ast.className];
             if (ast.className === 'LogicalNotOp') {
-              if ((_ref9 = ast.expression.className) === 'InOp' || _ref9 === 'OfOp' || _ref9 === 'InstanceofOp') {
+              if ((_ref8 = ast.expression.className) === 'InOp' || _ref8 === 'OfOp' || _ref8 === 'InstanceofOp') {
                 _op = '';
                 prec = precedence[ast.expression.className];
               }
@@ -23853,7 +24316,7 @@ require.define("/node_modules/coffee2ls-codegen/lib/coffee2ls-codegen.js",functi
               }
             }
             needsParens = prec < options.precedence;
-            if (parentClassName === ast.className && ((_ref10 = ast.className) === 'UnaryPlusOp' || _ref10 === 'UnaryNegateOp')) {
+            if (parentClassName === ast.className && ((_ref9 = ast.className) === 'UnaryPlusOp' || _ref9 === 'UnaryNegateOp')) {
               needsParens = true;
             }
             options = clone(options, {
@@ -23916,11 +24379,11 @@ require.define("/node_modules/coffee2ls-codegen/lib/coffee2ls-codegen.js",functi
               if (_fn_indented = _fn.match(/\n(\s+).*$/)) {
                 matched = _fn_indented[0], spaces = _fn_indented[1];
                 _argList = ((function() {
-                  var _k, _len2, _ref11, _results;
-                  _ref11 = _argList.split('\n');
+                  var _k, _len2, _ref10, _results;
+                  _ref10 = _argList.split('\n');
                   _results = [];
-                  for (_k = 0, _len2 = _ref11.length; _k < _len2; _k++) {
-                    line = _ref11[_k];
+                  for (_k = 0, _len2 = _ref10.length; _k < _len2; _k++) {
+                    line = _ref10[_k];
                     _results.push(line.replace(new RegExp("^" + spaces), "" + TAB + spaces));
                   }
                   return _results;
@@ -23984,7 +24447,7 @@ require.define("/node_modules/coffee2ls-codegen/lib/coffee2ls-codegen.js",functi
             }
             options.precedence = 0;
             _indexingExpr = generate(ast.indexingExpr, options);
-            if (ast.className === 'DynamicMemberAccessOp' && ((_ref11 = ast.indexingExpr.className) === 'String' || _ref11 === 'Int')) {
+            if (ast.className === 'DynamicMemberAccessOp' && ((_ref10 = ast.indexingExpr.className) === 'String' || _ref10 === 'Int')) {
               return "" + _expr + _op + "." + _indexingExpr;
             } else {
               return "" + _expr + _op + "[" + _indexingExpr + "]";
@@ -24001,12 +24464,14 @@ require.define("/node_modules/coffee2ls-codegen/lib/coffee2ls-codegen.js",functi
           case 'RegExp':
           case 'HeregExp':
             options.ancestors = [ast].concat(__slice.call(options.ancestors));
-            _symbol = '//';
-            _exprs = ast.className === 'RegExp' ? ast.data : formatInterpolation(ast.expression, options);
+            _exprs = ast.className === 'RegExp' ? (_symbol = '/', ast.data) : (_symbol = '//', formatInterpolation(ast.expression, options));
+            if (!_exprs) {
+              _symbol = '//';
+            }
             _flags = '';
-            _ref12 = ast.flags;
-            for (flag in _ref12) {
-              state = _ref12[flag];
+            _ref11 = ast.flags;
+            for (flag in _ref11) {
+              state = _ref11[flag];
               if (state) {
                 _flags += flag;
               }
@@ -24014,7 +24479,15 @@ require.define("/node_modules/coffee2ls-codegen/lib/coffee2ls-codegen.js",functi
             return "" + _symbol + _exprs + _symbol + _flags;
           case 'DoOp':
             exp = ast.expression;
-            if (exp.className === 'Function' && (((exp.body != null) && exp.body.className !== 'Undefined') || exp.parameters.length)) {
+            if (exp.className === 'AssignOp' && exp.expression.className === 'Function') {
+              prec = precedence[ast.className];
+              needsParens = prec < options.precedence;
+              options = clone(options, {
+                ancestors: [ast].concat(__slice.call(options.ancestors)),
+                precedence: prec
+              });
+              return "(" + (generate(exp, options)) + ")(" + (generateArgs(exp.expression.parameters, options)) + ")";
+            } else if (exp.className === 'Function' && (((exp.body != null) && exp.body.className !== 'Undefined') || exp.parameters.length)) {
               options = clone(options, {
                 ancestors: [ast].concat(__slice.call(options.ancestors)),
                 precedence: prec,
@@ -24023,11 +24496,11 @@ require.define("/node_modules/coffee2ls-codegen/lib/coffee2ls-codegen.js",functi
               });
               _op = 'let ';
               parameters = (function() {
-                var _k, _len2, _ref13, _results;
-                _ref13 = exp.parameters;
+                var _k, _len2, _ref12, _results;
+                _ref12 = exp.parameters;
                 _results = [];
-                for (_k = 0, _len2 = _ref13.length; _k < _len2; _k++) {
-                  p = _ref13[_k];
+                for (_k = 0, _len2 = _ref12.length; _k < _len2; _k++) {
+                  p = _ref12[_k];
                   _results.push(generate(p, options));
                 }
                 return _results;
@@ -24098,7 +24571,8 @@ require.define("/node_modules/coffee2ls-codegen/lib/coffee2ls-codegen.js",functi
               } else if (nonLiteral && !_by) {
                 firstRef = genVar(options);
                 secondRef = genVar(options);
-                return parens("if (" + firstRef + " = " + _left + ") > (" + secondRef + " = " + _right + ") then [" + firstRef + " " + _mid + " " + secondRef + " by -1] else [" + firstRef + " " + _mid + " " + secondRef + "]");
+                needsParens = true;
+                return "if (" + firstRef + " = " + _left + ") > (" + secondRef + " = " + _right + ") then [" + firstRef + " " + _mid + " " + secondRef + " by -1] else [" + firstRef + " " + _mid + " " + secondRef + "]";
               } else {
                 return "[" + _left + " " + _mid + " " + _right + _by + "]";
               }
@@ -24112,7 +24586,7 @@ require.define("/node_modules/coffee2ls-codegen/lib/coffee2ls-codegen.js",functi
             _firstAssg = ast.valAssignee ? generate(ast.valAssignee, options) : '';
             _secondAssg = ast.keyAssignee ? generate(ast.keyAssignee, options) : '';
             if (type === 'of') {
-              _ref13 = [_secondAssg, _firstAssg], _firstAssg = _ref13[0], _secondAssg = _ref13[1];
+              _ref12 = [_secondAssg, _firstAssg], _firstAssg = _ref12[0], _secondAssg = _ref12[1];
             }
             if (_secondAssg) {
               _secondAssg = ", " + _secondAssg;
@@ -24121,17 +24595,15 @@ require.define("/node_modules/coffee2ls-codegen/lib/coffee2ls-codegen.js",functi
             _step = !ast.step || ast.step.className === 'Int' && ast.step.data === 1 ? '' : " by " + (generate(ast.step, options));
             _filter = ast.filter ? " when " + (generate(ast.filter, options)) : '';
             comprehension = false;
-            _body = ast.body ? (comprehension = ast.body.className === 'Block' ? 1 === ast.body.statements.length && 'For' !== ast.body.statements[0].className.slice(0, 3) : ((_ref14 = ast.body.className) !== 'Function' && _ref14 !== 'BoundFunction') && 'For' !== ast.body.className.slice(0, 3), comprehension && (comprehension = usedAsExpression), generate(ast.body, options)) : 'void';
+            _body = ast.body ? (comprehension = ast.body.className === 'Block' ? 1 === ast.body.statements.length && 'For' !== ast.body.statements[0].className.slice(0, 3) : ((_ref13 = ast.body.className) !== 'Function' && _ref13 !== 'BoundFunction') && 'For' !== ast.body.className.slice(0, 3), comprehension && (comprehension = usedAsExpression), generate(ast.body, options)) : 'void';
             _mainPart = "for " + _own + _firstAssg + _secondAssg + " " + _target + _step + _filter;
             if (comprehension) {
               return "[" + _body + " " + _mainPart + "]";
             } else {
-              _output = "" + _mainPart + "\n" + (indent(_body));
               if (usedAsExpression && parentClassName !== 'AssignOp') {
-                return parens(_output);
-              } else {
-                return _output;
+                needsParens = true;
               }
+              return "" + _mainPart + "\n" + (indent(_body));
             }
             break;
           case 'While':
@@ -24144,11 +24616,11 @@ require.define("/node_modules/coffee2ls-codegen/lib/coffee2ls-codegen.js",functi
             _expression = ast.expression ? " " + (generate(ast.expression, options)) : '';
             output = "switch" + _expression + "\n";
             output += ((function() {
-              var _k, _len2, _ref15, _results;
-              _ref15 = ast.cases;
+              var _k, _len2, _ref14, _results;
+              _ref14 = ast.cases;
               _results = [];
-              for (_k = 0, _len2 = _ref15.length; _k < _len2; _k++) {
-                c = _ref15[_k];
+              for (_k = 0, _len2 = _ref14.length; _k < _len2; _k++) {
+                c = _ref14[_k];
                 _results.push(generate(c, options));
               }
               return _results;
@@ -24160,11 +24632,11 @@ require.define("/node_modules/coffee2ls-codegen/lib/coffee2ls-codegen.js",functi
           case 'SwitchCase':
             options.ancestors = [ast].concat(__slice.call(options.ancestors));
             _conditions = ast.conditions.length ? ((function() {
-              var _k, _len2, _ref15, _results;
-              _ref15 = ast.conditions;
+              var _k, _len2, _ref14, _results;
+              _ref14 = ast.conditions;
               _results = [];
-              for (_k = 0, _len2 = _ref15.length; _k < _len2; _k++) {
-                c = _ref15[_k];
+              for (_k = 0, _len2 = _ref14.length; _k < _len2; _k++) {
+                c = _ref14[_k];
                 _results.push(generate(c, options));
               }
               return _results;
@@ -24185,13 +24657,10 @@ require.define("/node_modules/coffee2ls-codegen/lib/coffee2ls-codegen.js",functi
             _catchBody = ast.catchBody ? "\n" + (indent(generate(ast.catchBody, options))) : '';
             finallyBody = ast.finallyBody ? generate(ast.finallyBody, options) : '';
             _finally = finallyBody ? "\nfinally\n" + (indent(finallyBody)) : '';
-            out = "try\n" + (indent(_body)) + "\ncatch" + _catchAssg + _catchBody + _finally;
             if (usedAsExpression) {
-              return parens(out);
-            } else {
-              return out;
+              needsParens = true;
             }
-            break;
+            return "try\n" + (indent(_body)) + "\ncatch" + _catchAssg + _catchBody + _finally;
           case 'Super':
             options.ancestors = [ast].concat(__slice.call(options.ancestors));
             _args = ast["arguments"].length ? "" + (generateArgs(ast["arguments"], options)) : '...';
@@ -24202,7 +24671,10 @@ require.define("/node_modules/coffee2ls-codegen/lib/coffee2ls-codegen.js",functi
             _nameAssg = ast.nameAssignee ? (_s = ' ', generate(ast.nameAssignee, options)) : '';
             _parent = ast.parent ? " extends " + (generate(ast.parent, options)) : '';
             _body = ast.body ? "\n" + (indent(generate(ast.body, options))) : '';
-            if (((_ref15 = ast.nameAssignee) != null ? _ref15.className : void 0) === 'MemberAccessOp') {
+            if (usedAsExpression) {
+              needsParens = true;
+            }
+            if (((_ref14 = ast.nameAssignee) != null ? _ref14.className : void 0) === 'MemberAccessOp') {
               return "" + _nameAssg + " = class" + _parent + _body;
             } else {
               return "class" + _s + _nameAssg + _parent + _body;
@@ -31141,7 +31613,7 @@ require.define("/package.json",function(require,module,exports,__dirname,__filen
   },
   "devDependencies": {
     "mocha": "~1.6.0",
-    "pegjs": "git://github.com/michaelficarra/CoffeeScriptRedux.git#pegjs",
+    "pegjs": "git://github.com/dmajda/pegjs.git#ee1a0b5810c8369c76b4d55752862674ce46c381",
     "browserify": "~1.16"
   },
   "dependencies": {
